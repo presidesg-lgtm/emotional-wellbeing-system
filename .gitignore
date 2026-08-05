@@ -1,0 +1,45 @@
+# Python virtual environment
+.venv/
+venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Flask environment files
+.env
+instance/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Uploaded user files
+uploads/
+
+# Machine-learning datasets
+ml/data/raw/*
+ml/data/processed/*
+
+# Keep empty dataset directories
+!ml/data/raw/.gitkeep
+!ml/data/processed/.gitkeep
+
+# Saved trained models
+ml/saved_models/*
+!ml/saved_models/.gitkeep
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# Test and coverage files
+.pytest_cache/
+.coverage
+htmlcov/
