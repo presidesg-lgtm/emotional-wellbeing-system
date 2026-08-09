@@ -1,6 +1,7 @@
 # Python virtual environment
 .venv/
 venv/
+.venv-wsl/
 
 # Python cache files
 __pycache__/
