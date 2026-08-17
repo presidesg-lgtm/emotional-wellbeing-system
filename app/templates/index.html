@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Emotional Wellbeing Analysis System</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+        <section class="analysis-card">
+            <div class="heading-group">
+                <p class="eyebrow">Emotional Wellbeing Support</p>
+
+                <h1>How are you feeling today?</h1>
+
+                <p class="intro-text">
+                    Write a short description of how you are feeling.
+                    The system will estimate the emotional tone expressed
+                    in your text.
+                </p>
+            </div>
+
+            <form id="analysis-form">
+                <label for="emotion-text">
+                    Describe how you feel
+                </label>
+
+                <textarea
+                    id="emotion-text"
+                    name="text"
+                    rows="7"
+                    maxlength="1000"
+                    placeholder="For example: I have been feeling nervous and overwhelmed about tomorrow..."
+                    required
+                ></textarea>
+
+                <div class="form-footer">
+                    <span id="character-count">
+                        0 / 1000
+                    </span>
+
+                    <button
+                        id="analyse-button"
+                        type="submit"
+                    >
+                        Analyse Emotion
+                    </button>
+                </div>
+            </form>
+
+            <div
+                id="error-message"
+                class="message error-message hidden"
+                role="alert"
+            ></div>
+
+            <section
+                id="result-card"
+                class="result-card hidden"
+                aria-live="polite"
+            >
+                <p class="result-label">
+                    Estimated emotional expression
+                </p>
+
+                <h2 id="emotion-result">
+                    -
+                </h2>
+
+                <div class="confidence-section">
+                    <div class="confidence-heading">
+                        <span>Model confidence</span>
+                        <strong id="confidence-result">0%</strong>
+                    </div>
+
+                    <div class="confidence-track">
+                        <div
+                            id="confidence-bar"
+                            class="confidence-bar"
+                        ></div>
+                    </div>
+                </div>
+
+                <div class="support-message">
+                    <h3>Supportive reflection</h3>
+                    <p id="supportive-feedback"></p>
+                </div>
+
+                <p
+                    id="disclaimer-result"
+                    class="disclaimer"
+                ></p>
+            </section>
+        </section>
+    </main>
+
+    <script
+        src="{{ url_for('static', filename='js/analysis.js') }}"
+    ></script>
+</body>
+</html>

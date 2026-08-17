@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 
 from app.routes.analysis import analysis_blueprint
 
@@ -16,7 +16,7 @@ def create_app() -> Flask:
     app.register_blueprint(analysis_blueprint)
 
     @app.get("/")
-    def index() -> str:
-        return "Emotional Wellbeing Analysis System is running."
+    def index():
+        return render_template("index.html")
 
     return app
