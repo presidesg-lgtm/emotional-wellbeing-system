@@ -15,10 +15,38 @@
 <body>
     <main class="page-shell">
         <section class="analysis-card">
-            <div class="heading-group">
-                <p class="eyebrow">Emotional Wellbeing Support</p>
 
-                <h1>How are you feeling today?</h1>
+            {% if session.get("user_id") %}
+                <div class="user-bar">
+                    <span>
+                        Signed in as
+                        <strong>
+                            {{ session.get("full_name") }}
+                        </strong>
+                    </span>
+
+                    <form
+                        method="post"
+                        action="{{ url_for('auth.logout') }}"
+                    >
+                        <button
+                            type="submit"
+                            class="logout-button"
+                        >
+                            Log out
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+
+            <div class="heading-group">
+                <p class="eyebrow">
+                    Emotional Wellbeing Support
+                </p>
+
+                <h1>
+                    How are you feeling today?
+                </h1>
 
                 <p class="intro-text">
                     Write a short description of how you are feeling.
@@ -76,8 +104,13 @@
 
                 <div class="confidence-section">
                     <div class="confidence-heading">
-                        <span>Model confidence</span>
-                        <strong id="confidence-result">0%</strong>
+                        <span>
+                            Model confidence
+                        </span>
+
+                        <strong id="confidence-result">
+                            0%
+                        </strong>
                     </div>
 
                     <div class="confidence-track">
@@ -89,7 +122,10 @@
                 </div>
 
                 <div class="support-message">
-                    <h3>Supportive reflection</h3>
+                    <h3>
+                        Supportive reflection
+                    </h3>
+
                     <p id="supportive-feedback"></p>
                 </div>
 
@@ -98,6 +134,7 @@
                     class="disclaimer"
                 ></p>
             </section>
+
         </section>
     </main>
 

@@ -8,7 +8,23 @@ analysis_blueprint = Blueprint(
     __name__,
 )
 
-emotion_service = EmotionAnalysisService()
+_emotion_service = None
+
+
+def get_emotion_service():
+    """
+    Create the emotion-analysis service only when it is first needed.
+
+    This prevents the transformer model from being loaded during
+    unrelated application tasks such as database scripts.
+    """
+
+    global _emotion_service
+
+    if _emotion_service is None:
+        _emotion_service = EmotionAnalysisService()
+
+    return _emotion_service
 
 
 @analysis_blueprint.post("/api/analyse")
@@ -22,6 +38,8 @@ def analyse_text():
     text = request_data.get("text", "")
 
     try:
+        emotion_service = get_emotion_service()
+
         result = emotion_service.analyse_text(text)
 
         return jsonify(
