@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Dashboard | Emotional Wellbeing Analysis System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+        <section class="analysis-card dashboard-card">
+
+            <div class="user-bar">
+                <span>
+                    Signed in as
+                    <strong>
+                        {{ session.get("full_name") }}
+                    </strong>
+                </span>
+
+                <div class="user-actions">
+                    <a
+                        href="{{ url_for('index') }}"
+                        class="secondary-link-button"
+                    >
+                        Analyse Emotion
+                    </a>
+
+                    <a
+                        href="{{ url_for('history.mood_history') }}"
+                        class="secondary-link-button"
+                    >
+                        Mood History
+                    </a>
+
+                    <form
+                        method="post"
+                        action="{{ url_for('auth.logout') }}"
+                    >
+                        <button
+                            type="submit"
+                            class="logout-button"
+                        >
+                            Log out
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="heading-group">
+                <p class="eyebrow">
+                    Emotional Wellbeing Support
+                </p>
+
+                <h1>
+                    Dashboard
+                </h1>
+
+                <p class="intro-text">
+                    A summary of your recent emotion-analysis activity.
+                    These results describe patterns in emotional language
+                    and are not medical diagnoses.
+                </p>
+            </div>
+
+            <section class="summary-grid">
+
+                <article class="summary-card">
+                    <p class="summary-label">
+                        Total analyses
+                    </p>
+
+                    <h2>
+                        {{ summary.total_analyses }}
+                    </h2>
+                </article>
+
+                <article class="summary-card">
+                    <p class="summary-label">
+                        Most common emotion
+                    </p>
+
+                    <h2>
+                        {{ summary.most_common_emotion }}
+                    </h2>
+                </article>
+
+                <article class="summary-card">
+                    <p class="summary-label">
+                        Average confidence
+                    </p>
+
+                    <h2>
+                        {{
+                            "%.1f"|format(
+                                summary.average_confidence * 100
+                            )
+                        }}%
+                    </h2>
+                </article>
+
+            </section>
+
+            <section class="distribution-section">
+                <div class="section-heading">
+                    <h2>
+                        Emotion distribution
+                    </h2>
+
+                    <p>
+                        Number of saved analyses for each
+                        emotional expression.
+                    </p>
+                </div>
+
+                <div class="distribution-chart">
+
+                    {% set maximum_count =
+                        emotion_distribution.values() | max
+                    %}
+
+                    {% for emotion, count in emotion_distribution.items() %}
+
+                        {% if maximum_count > 0 %}
+                            {% set bar_width =
+                                (count / maximum_count * 100) | round(1)
+                            %}
+                        {% else %}
+                            {% set bar_width = 0 %}
+                        {% endif %}
+
+                        <div class="distribution-row">
+
+                            <div class="distribution-label">
+                                {{ emotion }}
+                            </div>
+
+                            <div class="distribution-track">
+                                <progress
+                                    class="distribution-progress"
+                                    value="{{ bar_width }}"
+                                    max="100"
+                                    aria-label="{{ emotion }} distribution"
+                                >
+                                    {{ bar_width }}%
+                                </progress>
+                            </div>
+
+                            <div class="distribution-count">
+                                {{ count }}
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+            </section>
+
+            <section class="recent-section">
+                <h2>
+                    Recent analyses
+                </h2>
+
+                {% if recent_entries %}
+
+                    <div class="history-list">
+
+                        {% for entry in recent_entries %}
+                            <article class="history-entry">
+
+                                <div class="history-entry-heading">
+                                    <div>
+                                        <p class="result-label">
+                                            Estimated emotional expression
+                                        </p>
+
+                                        <h2>
+                                            {{ entry.predicted_emotion }}
+                                        </h2>
+                                    </div>
+
+                                    <div class="history-meta">
+                                        {{ entry.created_at.strftime(
+                                            "%d %b %Y, %H:%M"
+                                        ) }}
+                                    </div>
+                                </div>
+
+                                <p class="history-text">
+                                    {{ entry.submitted_text }}
+                                </p>
+
+                                <div class="history-confidence">
+                                    Confidence:
+
+                                    <strong>
+                                        {{
+                                            "%.1f"|format(
+                                                entry.confidence|float * 100
+                                            )
+                                        }}%
+                                    </strong>
+                                </div>
+
+                            </article>
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-history">
+                        <p>
+                            No analyses have been saved yet.
+                        </p>
+                    </div>
+
+                {% endif %}
+            </section>
+
+        </section>
+    </main>
+</body>
+</html>

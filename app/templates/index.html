@@ -25,17 +25,33 @@
                         </strong>
                     </span>
 
-                    <form
-                        method="post"
-                        action="{{ url_for('auth.logout') }}"
-                    >
-                        <button
-                            type="submit"
-                            class="logout-button"
+                    <div class="user-actions">
+                        <a
+                            href="{{ url_for('history.mood_history') }}"
+                            class="secondary-link-button"
                         >
-                            Log out
-                        </button>
-                    </form>
+                            Mood History
+                        </a>
+
+                        <a
+                            href="{{ url_for('dashboard.dashboard') }}"
+                            class="secondary-link-button"
+                        >
+                            Dashboard
+                        </a>
+
+                        <form
+                            method="post"
+                            action="{{ url_for('auth.logout') }}"
+                        >
+                            <button
+                                type="submit"
+                                class="logout-button"
+                            >
+                                Log out
+                            </button>
+                        </form>
+                    </div>
                 </div>
             {% endif %}
 

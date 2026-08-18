@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 
+from app.repositories.mood_repository import create_mood_entry
 from app.services.emotion_analysis_service import EmotionAnalysisService
 
 
@@ -30,8 +31,20 @@ def get_emotion_service():
 @analysis_blueprint.post("/api/analyse")
 def analyse_text():
     """
-    Analyse user-submitted text and return an emotion prediction.
+    Analyse user-submitted text, return the prediction,
+    and store the result for the authenticated user.
     """
+
+    if "user_id" not in session:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": "You must be logged in to analyse text.",
+                }
+            ),
+            401,
+        )
 
     request_data = request.get_json(silent=True) or {}
 
@@ -42,9 +55,17 @@ def analyse_text():
 
         result = emotion_service.analyse_text(text)
 
+        mood_entry_id = create_mood_entry(
+            user_id=session["user_id"],
+            submitted_text=text.strip(),
+            predicted_emotion=result["emotion"],
+            confidence=result["confidence"],
+        )
+
         return jsonify(
             {
                 "success": True,
+                "mood_entry_id": mood_entry_id,
                 "emotion": result["emotion"],
                 "confidence": result["confidence"],
                 "disclaimer": (
