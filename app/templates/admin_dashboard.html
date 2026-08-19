@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Admin Dashboard | Emotional Wellbeing Analysis System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+        <section class="analysis-card dashboard-card">
+
+            <div class="user-bar">
+                <span>
+                    Administrator:
+                    <strong>
+                        {{ session.get("full_name") }}
+                    </strong>
+                </span>
+
+                <div class="user-actions">
+                    <form
+                        method="post"
+                        action="{{ url_for('auth.logout') }}"
+                    >
+                        <button
+                            type="submit"
+                            class="logout-button"
+                        >
+                            Log out
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% with messages =
+                get_flashed_messages(with_categories=true)
+            %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div
+                            class="message {{ category }}-message"
+                        >
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="heading-group">
+                <p class="eyebrow">
+                    System Administration
+                </p>
+
+                <h1>
+                    Admin Dashboard
+                </h1>
+
+                <p class="intro-text">
+                    Review registered accounts and
+                    system-level account information.
+                </p>
+            </div>
+
+            <section class="admin-statistics-grid">
+
+                <article class="summary-card">
+                    <p class="summary-label">
+                        Total accounts
+                    </p>
+
+                    <h2>
+                        {{ statistics.total_accounts }}
+                    </h2>
+                </article>
+
+                <article class="summary-card">
+                    <p class="summary-label">
+                        Active accounts
+                    </p>
+
+                    <h2>
+                        {{ statistics.active_accounts }}
+                    </h2>
+                </article>
+
+                <article class="summary-card">
+                    <p class="summary-label">
+                        Normal users
+                    </p>
+
+                    <h2>
+                        {{ statistics.user_accounts }}
+                    </h2>
+                </article>
+
+                <article class="summary-card">
+                    <p class="summary-label">
+                        Counsellors
+                    </p>
+
+                    <h2>
+                        {{ statistics.counsellor_accounts }}
+                    </h2>
+                </article>
+
+                <article class="summary-card">
+                    <p class="summary-label">
+                        Administrators
+                    </p>
+
+                    <h2>
+                        {{ statistics.admin_accounts }}
+                    </h2>
+                </article>
+
+            </section>
+
+            <section class="admin-users-section">
+
+                <div class="section-heading">
+                    <h2>
+                        Registered accounts
+                    </h2>
+
+                    <p>
+                        Account information available to
+                        system administrators.
+                    </p>
+                </div>
+
+                {% if users %}
+
+                    <div class="admin-table-wrapper">
+
+                        <table class="admin-user-table">
+
+                            <thead>
+                                <tr>
+                                    <th>
+                                        ID
+                                    </th>
+
+                                    <th>
+                                        Name
+                                    </th>
+
+                                    <th>
+                                        Email
+                                    </th>
+
+                                    <th>
+                                        Role
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Registered
+                                    </th>
+
+                                    <th>
+                                        Action
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                {% for user in users %}
+
+                                    <tr>
+
+                                        <td>
+                                            {{ user.id }}
+                                        </td>
+
+                                        <td>
+                                            {{ user.full_name }}
+                                        </td>
+
+                                        <td>
+                                            {{ user.email }}
+                                        </td>
+
+                                        <td>
+                                            <span
+                                                class="role-badge"
+                                            >
+                                                {{ user.role | title }}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            {% if user.is_active %}
+
+                                                <span
+                                                    class="
+                                                        status-badge
+                                                        status-active
+                                                    "
+                                                >
+                                                    Active
+                                                </span>
+
+                                            {% else %}
+
+                                                <span
+                                                    class="
+                                                        status-badge
+                                                        status-inactive
+                                                    "
+                                                >
+                                                    Inactive
+                                                </span>
+
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            {{
+                                                user.created_at.strftime(
+                                                    "%d %b %Y"
+                                                )
+                                            }}
+                                        </td>
+
+                                        <td>
+
+                                            {% if user.id == session.get("user_id") %}
+
+                                                <span
+                                                    class="current-account-label"
+                                                >
+                                                    Current account
+                                                </span>
+
+                                            {% elif user.is_active %}
+
+                                                <form
+                                                    method="post"
+                                                    action="{{
+                                                        url_for(
+                                                            'admin.update_account_status',
+                                                            user_id=user.id
+                                                        )
+                                                    }}"
+                                                >
+                                                    <input
+                                                        type="hidden"
+                                                        name="action"
+                                                        value="deactivate"
+                                                    >
+
+                                                    <button
+                                                        type="submit"
+                                                        class="account-action-button deactivate-button"
+                                                    >
+                                                        Deactivate
+                                                    </button>
+                                                </form>
+
+                                            {% else %}
+
+                                                <form
+                                                    method="post"
+                                                    action="{{
+                                                        url_for(
+                                                            'admin.update_account_status',
+                                                            user_id=user.id
+                                                        )
+                                                    }}"
+                                                >
+                                                    <input
+                                                        type="hidden"
+                                                        name="action"
+                                                        value="activate"
+                                                    >
+
+                                                    <button
+                                                        type="submit"
+                                                        class="account-action-button activate-button"
+                                                    >
+                                                        Activate
+                                                    </button>
+                                                </form>
+
+                                            {% endif %}
+
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-history">
+                        <p>
+                            No registered accounts were found.
+                        </p>
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+            <div class="admin-notice">
+
+                <strong>
+                    Privacy-aware administration
+                </strong>
+
+                <p>
+                    This dashboard displays account information
+                    and aggregate statistics only. It does not
+                    display the private emotional text submitted
+                    by individual users.
+                </p>
+
+            </div>
+
+        </section>
+    </main>
+</body>
+</html>

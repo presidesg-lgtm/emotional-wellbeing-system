@@ -26,7 +26,7 @@ auth_blueprint = Blueprint(
 )
 def register():
     """
-    Display the registration form and create a user account.
+    Display the registration form and create a normal user account.
     """
 
     if request.method == "POST":
@@ -98,7 +98,8 @@ def register():
 )
 def login():
     """
-    Authenticate the user and create a login session.
+    Authenticate the account, create a session,
+    and redirect according to the user's role.
     """
 
     if request.method == "POST":
@@ -132,6 +133,11 @@ def login():
         session["user_id"] = user["id"]
         session["full_name"] = user["full_name"]
         session["role"] = user["role"]
+
+        if user["role"] == "admin":
+            return redirect(
+                url_for("admin.dashboard")
+            )
 
         return redirect(
             url_for("index")
