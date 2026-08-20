@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Book Appointment | Emotional Wellbeing Analysis System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+        <section class="analysis-card auth-card">
+
+            <div class="user-bar">
+                <span>
+                    Signed in as
+                    <strong>
+                        {{ session.get("full_name") }}
+                    </strong>
+                </span>
+
+                <div class="user-actions">
+                    <a
+                        href="{{ url_for('counsellors.counsellor_list') }}"
+                        class="secondary-link-button"
+                    >
+                        Back to Counsellors
+                    </a>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div
+                            class="message {{ category }}-message"
+                        >
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="heading-group">
+                <p class="eyebrow">
+                    Appointment Request
+                </p>
+
+                <h1>
+                    Book Appointment
+                </h1>
+
+                <p class="intro-text">
+                    Request an appointment with
+                    <strong>
+                        {{ counsellor.full_name }}
+                    </strong>.
+                </p>
+            </div>
+
+            <div class="booking-counsellor-summary">
+
+                <p class="summary-label">
+                    Selected counsellor
+                </p>
+
+                <h2>
+                    {{ counsellor.full_name }}
+                </h2>
+
+                <p>
+                    {{ counsellor.specialization }}
+                </p>
+
+            </div>
+
+            <form method="post">
+
+                <label for="appointment_date">
+                    Appointment date
+                </label>
+
+                <input
+                    id="appointment_date"
+                    name="appointment_date"
+                    type="date"
+                    min="{{ minimum_date }}"
+                    required
+                >
+
+                <label for="start_time">
+                    Preferred start time
+                </label>
+
+                <input
+                    id="start_time"
+                    name="start_time"
+                    type="time"
+                    required
+                >
+
+                <button type="submit">
+                    Submit Appointment Request
+                </button>
+
+            </form>
+
+            <p class="disclaimer">
+                Appointment requests remain pending until
+                reviewed by the selected counsellor.
+            </p>
+
+        </section>
+    </main>
+</body>
+</html>

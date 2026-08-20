@@ -36,6 +36,7 @@
 
             {% if session.get("user_id") %}
                 <div class="user-bar">
+
                     <span>
                         Signed in as
                         <strong>
@@ -44,6 +45,7 @@
                     </span>
 
                     <div class="user-actions">
+
                         <a
                             href="{{ url_for('history.mood_history') }}"
                             class="secondary-link-button"
@@ -58,6 +60,22 @@
                             Dashboard
                         </a>
 
+                        <a
+                            href="{{ url_for('appointments.my_appointments') }}"
+                            class="secondary-link-button"
+                        >
+                            My Appointments
+                        </a>
+
+                        {% if session.get("role") == "user" %}
+                            <a
+                                href="{{ url_for('counsellors.counsellor_list') }}"
+                                class="secondary-link-button"
+                            >
+                                Counsellors
+                            </a>
+                        {% endif %}
+
                         <form
                             method="post"
                             action="{{ url_for('auth.logout') }}"
@@ -69,6 +87,7 @@
                                 Log out
                             </button>
                         </form>
+
                     </div>
                 </div>
             {% endif %}
@@ -90,6 +109,7 @@
             </div>
 
             <form id="analysis-form">
+
                 <label for="emotion-text">
                     Describe how you feel
                 </label>
@@ -104,6 +124,7 @@
                 ></textarea>
 
                 <div class="form-footer">
+
                     <span id="character-count">
                         0 / 1000
                     </span>
@@ -114,7 +135,9 @@
                     >
                         Analyse Emotion
                     </button>
+
                 </div>
+
             </form>
 
             <div
@@ -128,6 +151,7 @@
                 class="result-card hidden"
                 aria-live="polite"
             >
+
                 <p class="result-label">
                     Estimated emotional expression
                 </p>
@@ -137,6 +161,7 @@
                 </h2>
 
                 <div class="confidence-section">
+
                     <div class="confidence-heading">
                         <span>
                             Model confidence
@@ -153,6 +178,7 @@
                             class="confidence-bar"
                         ></div>
                     </div>
+
                 </div>
 
                 <div class="support-message">
@@ -167,6 +193,7 @@
                     id="disclaimer-result"
                     class="disclaimer"
                 ></p>
+
             </section>
 
         </section>

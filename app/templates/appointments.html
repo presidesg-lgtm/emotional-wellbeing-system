@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        My Appointments | Emotional Wellbeing Analysis System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+        <section class="analysis-card dashboard-card">
+
+            <div class="user-bar">
+                <span>
+                    Signed in as
+                    <strong>
+                        {{ session.get("full_name") }}
+                    </strong>
+                </span>
+
+                <div class="user-actions">
+                    <a
+                        href="{{ url_for('index') }}"
+                        class="secondary-link-button"
+                    >
+                        Analyse Emotion
+                    </a>
+
+                    <a
+                        href="{{ url_for('counsellors.counsellor_list') }}"
+                        class="secondary-link-button"
+                    >
+                        Counsellors
+                    </a>
+
+                    <form
+                        method="post"
+                        action="{{ url_for('auth.logout') }}"
+                    >
+                        <button
+                            type="submit"
+                            class="logout-button"
+                        >
+                            Log out
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="heading-group">
+                <p class="eyebrow">
+                    Professional Support
+                </p>
+
+                <h1>
+                    My Appointments
+                </h1>
+
+                <p class="intro-text">
+                    Review your appointment requests
+                    and their current status.
+                </p>
+            </div>
+
+            {% if appointments %}
+
+                <div class="counsellor-appointment-list">
+
+                    {% for appointment in appointments %}
+
+                        <article class="counsellor-appointment-card">
+
+                            <div class="appointment-card-heading">
+
+                                <div>
+                                    <p class="result-label">
+                                        Appointment #{{ appointment.id }}
+                                    </p>
+
+                                    <h2>
+                                        {{ appointment.counsellor_name }}
+                                    </h2>
+                                </div>
+
+                                <span
+                                    class="
+                                        appointment-status
+                                        appointment-status-{{ appointment.status }}
+                                    "
+                                >
+                                    {{ appointment.status | title }}
+                                </span>
+
+                            </div>
+
+                            <div class="appointment-details">
+
+                                <p>
+                                    <strong>
+                                        Date:
+                                    </strong>
+
+                                    {{
+                                        appointment.appointment_date.strftime(
+                                            "%d %b %Y"
+                                        )
+                                    }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Time:
+                                    </strong>
+
+                                    {{ appointment.formatted_start_time }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Specialization:
+                                    </strong>
+
+                                    {{ appointment.specialization }}
+                                </p>
+
+                            </div>
+
+                            {% if appointment.status == "pending" %}
+
+                                <p class="appointment-user-note">
+                                    Your appointment request is waiting
+                                    for counsellor review.
+                                </p>
+
+                            {% elif appointment.status == "confirmed" %}
+
+                                <p class="appointment-user-note">
+                                    Your appointment has been confirmed
+                                    by the counsellor.
+                                </p>
+
+                            {% elif appointment.status == "completed" %}
+
+                                <p class="appointment-user-note">
+                                    This appointment has been marked
+                                    as completed.
+                                </p>
+
+                            {% elif appointment.status == "rejected" %}
+
+                                <p class="appointment-user-note">
+                                    This appointment request was not accepted.
+                                </p>
+
+                            {% elif appointment.status == "cancelled" %}
+
+                                <p class="appointment-user-note">
+                                    This appointment has been cancelled.
+                                </p>
+
+                            {% endif %}
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-history">
+
+                    <h2>
+                        No appointments yet
+                    </h2>
+
+                    <p>
+                        You have not submitted any
+                        appointment requests.
+                    </p>
+
+                    <a
+                        href="{{ url_for('counsellors.counsellor_list') }}"
+                        class="primary-link-button"
+                    >
+                        Browse Counsellors
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+    </main>
+</body>
+</html>

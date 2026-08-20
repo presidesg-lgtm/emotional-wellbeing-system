@@ -139,6 +139,11 @@ def login():
                 url_for("admin.dashboard")
             )
 
+        if user["role"] == "counsellor":
+            return redirect(
+                url_for("counsellor_portal.dashboard")
+            )
+
         return redirect(
             url_for("index")
         )

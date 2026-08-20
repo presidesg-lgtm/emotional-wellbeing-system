@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Counsellor Dashboard |
+        Emotional Wellbeing Analysis System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+        <section class="analysis-card dashboard-card">
+
+            <div class="user-bar">
+                <span>
+                    Counsellor:
+                    <strong>
+                        {{ session.get("full_name") }}
+                    </strong>
+                </span>
+
+                <div class="user-actions">
+                    <form
+                        method="post"
+                        action="{{ url_for('auth.logout') }}"
+                    >
+                        <button
+                            type="submit"
+                            class="logout-button"
+                        >
+                            Log out
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% with messages =
+                get_flashed_messages(with_categories=true)
+            %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div
+                            class="message {{ category }}-message"
+                        >
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="heading-group">
+                <p class="eyebrow">
+                    Counsellor Portal
+                </p>
+
+                <h1>
+                    Appointment Dashboard
+                </h1>
+
+                <p class="intro-text">
+                    Review appointment requests assigned
+                    to your counsellor profile and update
+                    their status.
+                </p>
+            </div>
+
+            {% if appointments %}
+
+                <div class="counsellor-appointment-list">
+
+                    {% for appointment in appointments %}
+
+                        <article class="counsellor-appointment-card">
+
+                            <div class="appointment-card-heading">
+
+                                <div>
+                                    <p class="result-label">
+                                        Appointment #{{ appointment.id }}
+                                    </p>
+
+                                    <h2>
+                                        {{ appointment.user_name }}
+                                    </h2>
+                                </div>
+
+                                <span
+                                    class="
+                                        appointment-status
+                                        appointment-status-{{ appointment.status }}
+                                    "
+                                >
+                                    {{ appointment.status | title }}
+                                </span>
+
+                            </div>
+
+                            <div class="appointment-details">
+
+                                <p>
+                                    <strong>
+                                        Date:
+                                    </strong>
+
+                                    {{
+                                        appointment.appointment_date.strftime(
+                                            "%d %b %Y"
+                                        )
+                                    }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Time:
+                                    </strong>
+
+                                    {{ appointment.formatted_start_time }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        User email:
+                                    </strong>
+
+                                    {{ appointment.user_email }}
+                                </p>
+
+                            </div>
+
+                            <div class="appointment-actions">
+
+                                {% if appointment.status == "pending" %}
+
+                                    <form
+                                        method="post"
+                                        action="{{
+                                            url_for(
+                                                'counsellor_portal.update_status',
+                                                appointment_id=appointment.id
+                                            )
+                                        }}"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="action"
+                                            value="confirm"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="appointment-confirm-button"
+                                        >
+                                            Confirm
+                                        </button>
+                                    </form>
+
+                                    <form
+                                        method="post"
+                                        action="{{
+                                            url_for(
+                                                'counsellor_portal.update_status',
+                                                appointment_id=appointment.id
+                                            )
+                                        }}"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="action"
+                                            value="reject"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="appointment-reject-button"
+                                        >
+                                            Reject
+                                        </button>
+                                    </form>
+
+                                {% elif appointment.status == "confirmed" %}
+
+                                    <form
+                                        method="post"
+                                        action="{{
+                                            url_for(
+                                                'counsellor_portal.update_status',
+                                                appointment_id=appointment.id
+                                            )
+                                        }}"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="action"
+                                            value="complete"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="appointment-complete-button"
+                                        >
+                                            Mark Completed
+                                        </button>
+                                    </form>
+
+                                    <form
+                                        method="post"
+                                        action="{{
+                                            url_for(
+                                                'counsellor_portal.update_status',
+                                                appointment_id=appointment.id
+                                            )
+                                        }}"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="action"
+                                            value="cancel"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="appointment-cancel-button"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </form>
+
+                                {% else %}
+
+                                    <span class="appointment-no-action">
+                                        No further action required
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-history">
+                    <h2>
+                        No appointments found
+                    </h2>
+
+                    <p>
+                        There are currently no appointment
+                        requests assigned to your account.
+                    </p>
+                </div>
+
+            {% endif %}
+
+        </section>
+    </main>
+</body>
+</html>

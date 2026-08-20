@@ -10,7 +10,12 @@ from config import Config
 
 from app.routes.admin import admin_blueprint
 from app.routes.analysis import analysis_blueprint
+from app.routes.appointments import appointment_blueprint
 from app.routes.auth import auth_blueprint
+from app.routes.counsellor_portal import (
+    counsellor_portal_blueprint,
+)
+from app.routes.counsellors import counsellor_blueprint
 from app.routes.dashboard import dashboard_blueprint
 from app.routes.history import history_blueprint
 
@@ -44,8 +49,25 @@ def create_app() -> Flask:
         admin_blueprint
     )
 
+    app.register_blueprint(
+        counsellor_blueprint
+    )
+
+    app.register_blueprint(
+        counsellor_portal_blueprint
+    )
+
+    app.register_blueprint(
+        appointment_blueprint
+    )
+
     @app.get("/")
     def index():
+        """
+        Display the correct landing page
+        according to the authenticated role.
+        """
+
         if "user_id" not in session:
             return redirect(
                 url_for("auth.login")
@@ -54,6 +76,11 @@ def create_app() -> Flask:
         if session.get("role") == "admin":
             return redirect(
                 url_for("admin.dashboard")
+            )
+
+        if session.get("role") == "counsellor":
+            return redirect(
+                url_for("counsellor_portal.dashboard")
             )
 
         return render_template(
