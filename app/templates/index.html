@@ -67,6 +67,13 @@
                             My Appointments
                         </a>
 
+                        <a
+                            href="{{ url_for('forum.forum_home') }}"
+                            class="secondary-link-button"
+                        >
+                            Community Forum
+                        </a>
+
                         {% if session.get("role") == "user" %}
                             <a
                                 href="{{ url_for('counsellors.counsellor_list') }}"

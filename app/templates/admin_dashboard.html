@@ -479,6 +479,274 @@
 
             </section>
 
+            <section class="admin-forum-section">
+
+                <div class="section-heading">
+                    <h2>
+                        Forum Moderation
+                    </h2>
+
+                    <p>
+                        Review reported community posts and
+                        manage post visibility.
+                    </p>
+                </div>
+
+                <h3 class="admin-subsection-heading">
+                    Reported Posts
+                </h3>
+
+                {% if forum_reports %}
+
+                    <div class="forum-moderation-list">
+
+                        {% for report in forum_reports %}
+
+                            <article class="forum-moderation-card">
+
+                                <div class="forum-moderation-heading">
+
+                                    <div>
+                                        <p class="result-label">
+                                            Report #{{ report.report_id }}
+                                        </p>
+
+                                        <h3>
+                                            Post #{{ report.post_id }}
+                                        </h3>
+                                    </div>
+
+                                    <span
+                                        class="
+                                            forum-report-status
+                                            forum-report-status-{{ report.report_status }}
+                                        "
+                                    >
+                                        {{ report.report_status | title }}
+                                    </span>
+
+                                </div>
+
+                                <div class="forum-moderation-details">
+
+                                    <p>
+                                        <strong>
+                                            Post author:
+                                        </strong>
+
+                                        {{ report.author_name }}
+                                    </p>
+
+                                    <p>
+                                        <strong>
+                                            Reported by:
+                                        </strong>
+
+                                        {{ report.reporter_name }}
+                                    </p>
+
+                                    <p>
+                                        <strong>
+                                            Reporter email:
+                                        </strong>
+
+                                        {{ report.reporter_email }}
+                                    </p>
+
+                                    <p>
+                                        <strong>
+                                            Post visibility:
+                                        </strong>
+
+                                        {% if report.is_hidden %}
+                                            Hidden
+                                        {% else %}
+                                            Visible
+                                        {% endif %}
+                                    </p>
+
+                                </div>
+
+                                <div class="forum-admin-post-preview">
+
+                                    <strong>
+                                        Reported content
+                                    </strong>
+
+                                    <p>
+                                        {{ report.post_content }}
+                                    </p>
+
+                                </div>
+
+                                <div class="forum-report-reason">
+
+                                    <strong>
+                                        Report reason
+                                    </strong>
+
+                                    <p>
+                                        {{ report.reason }}
+                                    </p>
+
+                                </div>
+
+                                {% if report.report_status == "pending" %}
+
+                                    <form
+                                        method="post"
+                                        action="{{
+                                            url_for(
+                                                'admin.moderate_forum_report',
+                                                report_id=report.report_id
+                                            )
+                                        }}"
+                                        class="forum-moderation-actions"
+                                    >
+
+                                        <input
+                                            type="hidden"
+                                            name="post_id"
+                                            value="{{ report.post_id }}"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            name="action"
+                                            value="hide"
+                                            class="appointment-reject-button"
+                                        >
+                                            Hide Post
+                                        </button>
+
+                                        <button
+                                            type="submit"
+                                            name="action"
+                                            value="dismiss"
+                                            class="appointment-confirm-button"
+                                        >
+                                            Dismiss Report
+                                        </button>
+
+                                    </form>
+
+                                {% else %}
+
+                                    <p class="appointment-no-action">
+                                        Moderation review completed
+                                    </p>
+
+                                {% endif %}
+
+                            </article>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-history">
+                        <p>
+                            No forum reports have been submitted.
+                        </p>
+                    </div>
+
+                {% endif %}
+
+
+                <h3 class="admin-subsection-heading forum-post-management-heading">
+                    All Forum Posts
+                </h3>
+
+                {% if forum_posts %}
+
+                    <div class="forum-moderation-list">
+
+                        {% for post in forum_posts %}
+
+                            <article class="forum-moderation-card">
+
+                                <div class="forum-moderation-heading">
+
+                                    <div>
+                                        <p class="result-label">
+                                            Community Post #{{ post.id }}
+                                        </p>
+
+                                        <h3>
+                                            {{ post.author_name }}
+                                        </h3>
+                                    </div>
+
+                                    {% if post.is_hidden %}
+
+                                        <span class="status-badge status-inactive">
+                                            Hidden
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="status-badge status-active">
+                                            Visible
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                                <div class="forum-admin-post-preview">
+                                    <p>
+                                        {{ post.content }}
+                                    </p>
+                                </div>
+
+                                <form
+                                    method="post"
+                                    action="{{
+                                        url_for(
+                                            'admin.update_forum_post_visibility',
+                                            post_id=post.id
+                                        )
+                                    }}"
+                                >
+
+                                    {% if post.is_hidden %}
+
+                                        <button
+                                            type="submit"
+                                            name="action"
+                                            value="restore"
+                                            class="appointment-confirm-button"
+                                        >
+                                            Restore Post
+                                        </button>
+
+                                    {% else %}
+
+                                        <button
+                                            type="submit"
+                                            name="action"
+                                            value="hide"
+                                            class="appointment-reject-button"
+                                        >
+                                            Hide Post
+                                        </button>
+
+                                    {% endif %}
+
+                                </form>
+
+                            </article>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
             <div class="admin-notice">
 
                 <strong>

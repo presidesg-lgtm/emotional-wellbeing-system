@@ -17,6 +17,7 @@ from app.routes.counsellor_portal import (
 )
 from app.routes.counsellors import counsellor_blueprint
 from app.routes.dashboard import dashboard_blueprint
+from app.routes.forum import forum_blueprint
 from app.routes.history import history_blueprint
 from app.routes.payments import payment_blueprint
 
@@ -64,6 +65,10 @@ def create_app() -> Flask:
 
     app.register_blueprint(
         payment_blueprint
+    )
+
+    app.register_blueprint(
+        forum_blueprint
     )
 
     @app.get("/")

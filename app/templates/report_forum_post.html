@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Report Forum Post | Emotional Wellbeing Analysis System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+        <section class="analysis-card auth-card">
+
+            <div class="user-bar">
+                <span>
+                    Signed in as
+                    <strong>
+                        {{ session.get("full_name") }}
+                    </strong>
+                </span>
+
+                <a
+                    href="{{ url_for('forum.forum_home') }}"
+                    class="secondary-link-button"
+                >
+                    Back to Forum
+                </a>
+            </div>
+
+            {% with messages =
+                get_flashed_messages(with_categories=true)
+            %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div
+                            class="message {{ category }}-message"
+                        >
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="heading-group">
+                <p class="eyebrow">
+                    Community Moderation
+                </p>
+
+                <h1>
+                    Report Forum Post
+                </h1>
+
+                <p class="intro-text">
+                    Report content that you believe requires
+                    administrator review.
+                </p>
+            </div>
+
+            <div class="forum-report-preview">
+                <p class="result-label">
+                    Post #{{ post.id }}
+                </p>
+
+                <p>
+                    {{ post.content }}
+                </p>
+            </div>
+
+            <form method="post">
+
+                <label for="reason">
+                    Reason for report
+                </label>
+
+                <textarea
+                    id="reason"
+                    name="reason"
+                    rows="4"
+                    maxlength="255"
+                    placeholder="Briefly explain why this post should be reviewed..."
+                    required
+                ></textarea>
+
+                <button type="submit">
+                    Submit Report
+                </button>
+
+            </form>
+
+        </section>
+    </main>
+</body>
+</html>
