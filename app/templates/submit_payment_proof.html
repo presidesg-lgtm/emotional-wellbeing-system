@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Submit Payment Proof |
+        Emotional Wellbeing Analysis System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+
+        <section class="analysis-card auth-card">
+
+            <div class="user-bar">
+
+                <span>
+                    Signed in as
+                    <strong>
+                        {{ session.get("full_name") }}
+                    </strong>
+                </span>
+
+                <div class="user-actions">
+
+                    <a
+                        href="{{ url_for('appointments.my_appointments') }}"
+                        class="secondary-link-button"
+                    >
+                        My Appointments
+                    </a>
+
+                </div>
+
+            </div>
+
+            {% with messages =
+                get_flashed_messages(with_categories=true)
+            %}
+
+                {% if messages %}
+
+                    {% for category, message in messages %}
+
+                        <div
+                            class="message {{ category }}-message"
+                        >
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                {% endif %}
+
+            {% endwith %}
+
+            <div class="heading-group">
+
+                <p class="eyebrow">
+                    Appointment Payment
+                </p>
+
+                <h1>
+                    Submit Payment Proof
+                </h1>
+
+                <p class="intro-text">
+                    Upload payment proof for your
+                    appointment with
+                    <strong>
+                        {{ appointment.counsellor_name }}
+                    </strong>.
+                </p>
+
+            </div>
+
+            <div class="booking-counsellor-summary">
+
+                <p class="summary-label">
+                    Appointment
+                </p>
+
+                <h2>
+                    Appointment #{{ appointment.id }}
+                </h2>
+
+                <p>
+                    {{ appointment.counsellor_name }}
+                </p>
+
+                <p>
+                    {{ appointment.specialization }}
+                </p>
+
+            </div>
+
+            <form
+                method="post"
+                enctype="multipart/form-data"
+            >
+
+                <label for="payment_proof">
+                    Payment proof
+                </label>
+
+                <input
+                    id="payment_proof"
+                    name="payment_proof"
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    required
+                >
+
+                <p class="upload-help-text">
+                    Accepted file types:
+                    PDF, PNG, JPG and JPEG.
+                </p>
+
+                <button type="submit">
+                    Submit Payment Proof
+                </button>
+
+            </form>
+
+            <p class="disclaimer">
+                Payment proof is submitted for
+                administrative verification only.
+                This system does not process payments.
+            </p>
+
+        </section>
+
+    </main>
+</body>
+</html>

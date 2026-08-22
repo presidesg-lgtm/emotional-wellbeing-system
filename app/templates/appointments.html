@@ -59,6 +59,20 @@
                 </div>
             </div>
 
+            {% with messages =
+                get_flashed_messages(with_categories=true)
+            %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div
+                            class="message {{ category }}-message"
+                        >
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             <div class="heading-group">
                 <p class="eyebrow">
                     Professional Support
@@ -69,8 +83,9 @@
                 </h1>
 
                 <p class="intro-text">
-                    Review your appointment requests
-                    and their current status.
+                    Review your appointment requests,
+                    their current status, and payment-proof
+                    verification information.
                 </p>
             </div>
 
@@ -79,6 +94,10 @@
                 <div class="counsellor-appointment-list">
 
                     {% for appointment in appointments %}
+
+                        {% set payment =
+                            payment_proofs.get(appointment.id)
+                        %}
 
                         <article class="counsellor-appointment-card">
 
@@ -169,6 +188,76 @@
                                 <p class="appointment-user-note">
                                     This appointment has been cancelled.
                                 </p>
+
+                            {% endif %}
+
+                            {% if appointment.status not in [
+                                "cancelled",
+                                "rejected"
+                            ] %}
+
+                                <div class="payment-section">
+
+                                    <h3>
+                                        Payment Proof
+                                    </h3>
+
+                                    {% if payment %}
+
+                                        <div class="payment-status-row">
+
+                                            <span>
+                                                Submitted file:
+                                                <strong>
+                                                    {{ payment.original_filename }}
+                                                </strong>
+                                            </span>
+
+                                            <span
+                                                class="
+                                                    payment-status-badge
+                                                    payment-status-{{ payment.status }}
+                                                "
+                                            >
+                                                {{ payment.status | title }}
+                                            </span>
+
+                                        </div>
+
+                                        {% if payment.admin_note %}
+
+                                            <p class="payment-admin-note">
+                                                <strong>
+                                                    Admin note:
+                                                </strong>
+
+                                                {{ payment.admin_note }}
+                                            </p>
+
+                                        {% endif %}
+
+                                    {% else %}
+
+                                        <p class="payment-help-text">
+                                            No payment proof has been
+                                            submitted for this appointment.
+                                        </p>
+
+                                        <a
+                                            href="{{
+                                                url_for(
+                                                    'payments.submit_payment_proof',
+                                                    appointment_id=appointment.id
+                                                )
+                                            }}"
+                                            class="primary-link-button"
+                                        >
+                                            Submit Payment Proof
+                                        </a>
+
+                                    {% endif %}
+
+                                </div>
 
                             {% endif %}
 

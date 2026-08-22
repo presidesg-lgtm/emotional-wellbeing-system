@@ -69,8 +69,9 @@
                 </h1>
 
                 <p class="intro-text">
-                    Review registered accounts and
-                    system-level account information.
+                    Review registered accounts,
+                    system information, and submitted
+                    appointment payment proofs.
                 </p>
             </div>
 
@@ -149,33 +150,13 @@
 
                             <thead>
                                 <tr>
-                                    <th>
-                                        ID
-                                    </th>
-
-                                    <th>
-                                        Name
-                                    </th>
-
-                                    <th>
-                                        Email
-                                    </th>
-
-                                    <th>
-                                        Role
-                                    </th>
-
-                                    <th>
-                                        Status
-                                    </th>
-
-                                    <th>
-                                        Registered
-                                    </th>
-
-                                    <th>
-                                        Action
-                                    </th>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Registered</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
 
@@ -198,9 +179,7 @@
                                         </td>
 
                                         <td>
-                                            <span
-                                                class="role-badge"
-                                            >
+                                            <span class="role-badge">
                                                 {{ user.role | title }}
                                             </span>
                                         </td>
@@ -313,11 +292,186 @@
 
                     </div>
 
+                {% endif %}
+
+            </section>
+
+            <section class="admin-payment-section">
+
+                <div class="section-heading">
+                    <h2>
+                        Payment Proof Review
+                    </h2>
+
+                    <p>
+                        Review payment evidence submitted
+                        for appointment requests.
+                    </p>
+                </div>
+
+                {% if payment_proofs %}
+
+                    <div class="payment-review-list">
+
+                        {% for payment in payment_proofs %}
+
+                            <article class="payment-review-card">
+
+                                <div class="payment-review-heading">
+
+                                    <div>
+                                        <p class="result-label">
+                                            Payment Proof #{{ payment.id }}
+                                        </p>
+
+                                        <h3>
+                                            Appointment
+                                            #{{ payment.appointment_id }}
+                                        </h3>
+                                    </div>
+
+                                    <span
+                                        class="
+                                            payment-status-badge
+                                            payment-status-{{ payment.status }}
+                                        "
+                                    >
+                                        {{ payment.status | title }}
+                                    </span>
+
+                                </div>
+
+                                <div class="payment-review-details">
+
+                                    <p>
+                                        <strong>
+                                            User:
+                                        </strong>
+
+                                        {{ payment.user_name }}
+                                    </p>
+
+                                    <p>
+                                        <strong>
+                                            User email:
+                                        </strong>
+
+                                        {{ payment.user_email }}
+                                    </p>
+
+                                    <p>
+                                        <strong>
+                                            Counsellor:
+                                        </strong>
+
+                                        {{ payment.counsellor_name }}
+                                    </p>
+
+                                    <p>
+                                        <strong>
+                                            Submitted file:
+                                        </strong>
+
+                                        {{ payment.original_filename }}
+                                    </p>
+
+                                </div>
+
+                                <a
+                                    href="{{
+                                        url_for(
+                                            'admin.view_payment_proof',
+                                            payment_proof_id=payment.id
+                                        )
+                                    }}"
+                                    class="secondary-link-button"
+                                    target="_blank"
+                                    rel="noopener"
+                                >
+                                    View Payment Proof
+                                </a>
+
+                                {% if payment.status == "pending" %}
+
+                                    <form
+                                        method="post"
+                                        action="{{
+                                            url_for(
+                                                'admin.review_payment',
+                                                payment_proof_id=payment.id
+                                            )
+                                        }}"
+                                        class="payment-review-form"
+                                    >
+
+                                        <label
+                                            for="admin-note-{{ payment.id }}"
+                                        >
+                                            Admin note
+                                            (optional)
+                                        </label>
+
+                                        <textarea
+                                            id="admin-note-{{ payment.id }}"
+                                            name="admin_note"
+                                            rows="3"
+                                            maxlength="500"
+                                            placeholder="Optional review note"
+                                        ></textarea>
+
+                                        <div class="payment-review-actions">
+
+                                            <button
+                                                type="submit"
+                                                name="action"
+                                                value="verify"
+                                                class="appointment-confirm-button"
+                                            >
+                                                Verify
+                                            </button>
+
+                                            <button
+                                                type="submit"
+                                                name="action"
+                                                value="reject"
+                                                class="appointment-reject-button"
+                                            >
+                                                Reject
+                                            </button>
+
+                                        </div>
+
+                                    </form>
+
+                                {% else %}
+
+                                    {% if payment.admin_note %}
+                                        <p class="payment-admin-note">
+                                            <strong>
+                                                Admin note:
+                                            </strong>
+
+                                            {{ payment.admin_note }}
+                                        </p>
+                                    {% endif %}
+
+                                    <p class="appointment-no-action">
+                                        Review completed
+                                    </p>
+
+                                {% endif %}
+
+                            </article>
+
+                        {% endfor %}
+
+                    </div>
+
                 {% else %}
 
                     <div class="empty-history">
                         <p>
-                            No registered accounts were found.
+                            No payment proofs have been submitted.
                         </p>
                     </div>
 
@@ -332,10 +486,10 @@
                 </strong>
 
                 <p>
-                    This dashboard displays account information
-                    and aggregate statistics only. It does not
-                    display the private emotional text submitted
-                    by individual users.
+                    Private emotional-analysis text is not
+                    displayed to administrators. Payment-proof
+                    files are available only through protected
+                    administrator routes for verification.
                 </p>
 
             </div>

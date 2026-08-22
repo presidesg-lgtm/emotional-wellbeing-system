@@ -1,11 +1,21 @@
+from pathlib import Path
+
 from flask import (
     Blueprint,
+    abort,
     flash,
     redirect,
     render_template,
     request,
+    send_file,
     session,
     url_for,
+)
+
+from app.repositories.payment_repository import (
+    get_all_payment_proofs,
+    get_payment_proof_by_id,
+    review_payment_proof,
 )
 
 from app.repositories.user_repository import (
@@ -70,10 +80,13 @@ def dashboard():
 
     users = get_all_users()
 
+    payment_proofs = get_all_payment_proofs()
+
     return render_template(
         "admin_dashboard.html",
         statistics=statistics,
         users=users,
+        payment_proofs=payment_proofs,
     )
 
 
@@ -151,6 +164,131 @@ def update_account_status(user_id: int):
     else:
         flash(
             "Account deactivated successfully.",
+            "success",
+        )
+
+    return redirect(
+        url_for("admin.dashboard")
+    )
+
+
+@admin_blueprint.get(
+    "/payments/<int:payment_proof_id>/file"
+)
+def view_payment_proof(payment_proof_id: int):
+    """
+    Allow an authenticated administrator to securely
+    view a submitted payment-proof file.
+    """
+
+    access_response = admin_access_required()
+
+    if access_response is not None:
+        return access_response
+
+    payment_proof = get_payment_proof_by_id(
+        payment_proof_id
+    )
+
+    if payment_proof is None:
+        abort(404)
+
+    upload_directory = Path(
+        "uploads/payment_proofs"
+    ).resolve()
+
+    file_path = (
+        upload_directory
+        / payment_proof["stored_filename"]
+    ).resolve()
+
+    if upload_directory not in file_path.parents:
+        abort(404)
+
+    if not file_path.is_file():
+        abort(404)
+
+    return send_file(
+        file_path,
+        download_name=payment_proof[
+            "original_filename"
+        ],
+        as_attachment=False,
+    )
+
+
+@admin_blueprint.post(
+    "/payments/<int:payment_proof_id>/review"
+)
+def review_payment(payment_proof_id: int):
+    """
+    Verify or reject a submitted payment proof.
+    """
+
+    access_response = admin_access_required()
+
+    if access_response is not None:
+        return access_response
+
+    action = request.form.get(
+        "action",
+        "",
+    )
+
+    admin_note = request.form.get(
+        "admin_note",
+        "",
+    ).strip()
+
+    allowed_actions = {
+        "verify": "verified",
+        "reject": "rejected",
+    }
+
+    if action not in allowed_actions:
+        flash(
+            "Invalid payment review action.",
+            "error",
+        )
+
+        return redirect(
+            url_for("admin.dashboard")
+        )
+
+    if len(admin_note) > 500:
+        flash(
+            "Admin note must not exceed 500 characters.",
+            "error",
+        )
+
+        return redirect(
+            url_for("admin.dashboard")
+        )
+
+    updated = review_payment_proof(
+        payment_proof_id=payment_proof_id,
+        status=allowed_actions[action],
+        admin_note=admin_note or None,
+    )
+
+    if not updated:
+        flash(
+            "Payment proof could not be updated.",
+            "error",
+        )
+
+        return redirect(
+            url_for("admin.dashboard")
+        )
+
+    if action == "verify":
+        flash(
+            "Payment proof verified successfully.",
+            "success",
+        )
+    else:
+        flash(
+            "Payment proof rejected.",
             "success",
         )
 

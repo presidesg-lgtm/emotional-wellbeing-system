@@ -10,6 +10,10 @@ from app.repositories.appointment_repository import (
     get_appointments_by_user,
 )
 
+from app.repositories.payment_repository import (
+    get_payment_proofs_by_user,
+)
+
 
 appointment_blueprint = Blueprint(
     "appointments",
@@ -20,8 +24,8 @@ appointment_blueprint = Blueprint(
 @appointment_blueprint.get("/appointments")
 def my_appointments():
     """
-    Display appointment requests belonging
-    to the authenticated normal user.
+    Display appointment requests and payment-proof
+    information belonging to the authenticated user.
     """
 
     if "user_id" not in session:
@@ -34,11 +38,23 @@ def my_appointments():
             url_for("index")
         )
 
+    user_id = session["user_id"]
+
     appointments = get_appointments_by_user(
-        session["user_id"]
+        user_id
     )
+
+    payment_proofs = get_payment_proofs_by_user(
+        user_id
+    )
+
+    payment_proofs_by_appointment = {
+        payment_proof["appointment_id"]: payment_proof
+        for payment_proof in payment_proofs
+    }
 
     return render_template(
         "appointments.html",
         appointments=appointments,
+        payment_proofs=payment_proofs_by_appointment,
     )
