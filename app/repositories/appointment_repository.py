@@ -1,3 +1,9 @@
+from datetime import (
+    datetime,
+    time,
+    timedelta,
+)
+
 from app.repositories.database import get_database_connection
 
 
@@ -18,6 +24,39 @@ def _format_start_time(start_time):
     ) // 60
 
     return f"{hours:02d}:{minutes:02d}"
+
+
+def _build_appointment_datetime(
+    appointment_date,
+    start_time,
+):
+    """
+    Combine a MySQL DATE value and TIME/timedelta value
+    into a Python datetime.
+    """
+
+    total_seconds = int(
+        start_time.total_seconds()
+    )
+
+    hours = total_seconds // 3600
+
+    minutes = (
+        total_seconds % 3600
+    ) // 60
+
+    seconds = total_seconds % 60
+
+    appointment_time = time(
+        hour=hours,
+        minute=minutes,
+        second=seconds,
+    )
+
+    return datetime.combine(
+        appointment_date,
+        appointment_time,
+    )
 
 
 def create_appointment(
@@ -216,6 +255,112 @@ def get_appointments_by_user(
     return appointments
 
 
+def get_upcoming_appointment_reminders(
+    user_id: int,
+    reminder_hours: int = 48,
+):
+    """
+    Return automatic reminders for confirmed appointments
+    occurring within the configured reminder window.
+    """
+
+    connection = get_database_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT
+            a.id,
+            a.appointment_date,
+            a.start_time,
+            a.status,
+            cp.specialization,
+            u.full_name AS counsellor_name
+        FROM appointments a
+        JOIN counsellor_profiles cp
+            ON cp.id = a.counsellor_profile_id
+        JOIN users u
+            ON u.id = cp.user_id
+        WHERE
+            a.user_id = %s
+            AND a.status = 'confirmed'
+        ORDER BY
+            a.appointment_date ASC,
+            a.start_time ASC
+        """,
+        (user_id,),
+    )
+
+    confirmed_appointments = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    now = datetime.now()
+
+    reminder_limit = (
+        now
+        + timedelta(
+            hours=reminder_hours
+        )
+    )
+
+    reminders = []
+
+    for appointment in confirmed_appointments:
+
+        appointment_datetime = (
+            _build_appointment_datetime(
+                appointment["appointment_date"],
+                appointment["start_time"],
+            )
+        )
+
+        if not (
+            now
+            < appointment_datetime
+            <= reminder_limit
+        ):
+            continue
+
+        if appointment_datetime.date() == now.date():
+            reminder_text = "later today"
+
+        elif (
+            appointment_datetime.date()
+            == (
+                now.date()
+                + timedelta(days=1)
+            )
+        ):
+            reminder_text = "tomorrow"
+
+        else:
+            reminder_text = (
+                "within the next 48 hours"
+            )
+
+        appointment[
+            "formatted_start_time"
+        ] = _format_start_time(
+            appointment["start_time"]
+        )
+
+        appointment[
+            "appointment_datetime"
+        ] = appointment_datetime
+
+        appointment[
+            "reminder_text"
+        ] = reminder_text
+
+        reminders.append(
+            appointment
+        )
+
+    return reminders
+
+
 def get_appointments_for_counsellor(
     counsellor_user_id: int,
 ):
@@ -345,8 +490,13 @@ def update_appointment_status(
         )
 
         if (
-            status in {"rejected", "cancelled"}
-            and appointment["availability_slot_id"] is not None
+            status in {
+                "rejected",
+                "cancelled",
+            }
+            and appointment[
+                "availability_slot_id"
+            ] is not None
         ):
             cursor.execute(
                 """
@@ -355,7 +505,9 @@ def update_appointment_status(
                 WHERE id = %s
                 """,
                 (
-                    appointment["availability_slot_id"],
+                    appointment[
+                        "availability_slot_id"
+                    ],
                 ),
             )
 

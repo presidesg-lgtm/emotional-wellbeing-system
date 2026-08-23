@@ -23,6 +23,7 @@
         <section class="analysis-card dashboard-card">
 
             <div class="user-bar">
+
                 <span>
                     Signed in as
                     <strong>
@@ -31,6 +32,7 @@
                 </span>
 
                 <div class="user-actions">
+
                     <a
                         href="{{ url_for('index') }}"
                         class="secondary-link-button"
@@ -56,7 +58,9 @@
                             Log out
                         </button>
                     </form>
+
                 </div>
+
             </div>
 
             {% with messages =
@@ -64,16 +68,19 @@
             %}
                 {% if messages %}
                     {% for category, message in messages %}
+
                         <div
                             class="message {{ category }}-message"
                         >
                             {{ message }}
                         </div>
+
                     {% endfor %}
                 {% endif %}
             {% endwith %}
 
             <div class="heading-group">
+
                 <p class="eyebrow">
                     Professional Support
                 </p>
@@ -84,10 +91,129 @@
 
                 <p class="intro-text">
                     Review your appointment requests,
-                    their current status, and payment-proof
-                    verification information.
+                    automatic reminders, current status,
+                    and payment-proof verification information.
                 </p>
+
             </div>
+
+            {% if appointment_reminders %}
+
+                <section class="recent-section">
+
+                    <div class="section-heading">
+
+                        <p class="eyebrow">
+                            Automatic Reminders
+                        </p>
+
+                        <h2>
+                            Upcoming Appointment Reminder
+                        </h2>
+
+                        <p>
+                            The system automatically highlights
+                            confirmed appointments occurring
+                            within the next 48 hours.
+                        </p>
+
+                    </div>
+
+                    <div class="counsellor-appointment-list">
+
+                        {% for reminder in appointment_reminders %}
+
+                            <article class="counsellor-appointment-card">
+
+                                <div class="appointment-card-heading">
+
+                                    <div>
+
+                                        <p class="result-label">
+                                            Appointment #{{ reminder.id }}
+                                        </p>
+
+                                        <h2>
+                                            {{ reminder.counsellor_name }}
+                                        </h2>
+
+                                    </div>
+
+                                    <span
+                                        class="
+                                            appointment-status
+                                            appointment-status-confirmed
+                                        "
+                                    >
+                                        Upcoming
+                                    </span>
+
+                                </div>
+
+                                <div class="appointment-details">
+
+                                    <p>
+                                        <strong>
+                                            Date:
+                                        </strong>
+
+                                        {{
+                                            reminder.appointment_date.strftime(
+                                                "%d %b %Y"
+                                            )
+                                        }}
+                                    </p>
+
+                                    <p>
+                                        <strong>
+                                            Time:
+                                        </strong>
+
+                                        {{ reminder.formatted_start_time }}
+                                    </p>
+
+                                    <p>
+                                        <strong>
+                                            Specialization:
+                                        </strong>
+
+                                        {{ reminder.specialization }}
+                                    </p>
+
+                                </div>
+
+                                <p class="appointment-user-note">
+
+                                    Reminder: your confirmed
+                                    appointment with
+
+                                    <strong>
+                                        {{ reminder.counsellor_name }}
+                                    </strong>
+
+                                    is scheduled
+
+                                    <strong>
+                                        {{ reminder.reminder_text }}
+                                    </strong>
+
+                                    at
+
+                                    <strong>
+                                        {{ reminder.formatted_start_time }}
+                                    </strong>.
+
+                                </p>
+
+                            </article>
+
+                        {% endfor %}
+
+                    </div>
+
+                </section>
+
+            {% endif %}
 
             {% if appointments %}
 
@@ -104,6 +230,7 @@
                             <div class="appointment-card-heading">
 
                                 <div>
+
                                     <p class="result-label">
                                         Appointment #{{ appointment.id }}
                                     </p>
@@ -111,6 +238,7 @@
                                     <h2>
                                         {{ appointment.counsellor_name }}
                                     </h2>
+
                                 </div>
 
                                 <span
