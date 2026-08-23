@@ -27,7 +27,10 @@ def create_appointment(
     start_time: str,
 ):
     """
-    Create a new pending appointment request.
+    Create a legacy/manual pending appointment request.
+
+    Retained for compatibility with appointments created
+    before the availability-slot workflow was introduced.
     """
 
     connection = get_database_connection()
@@ -62,6 +65,107 @@ def create_appointment(
     return appointment_id
 
 
+def create_appointment_from_slot(
+    user_id: int,
+    availability_slot_id: int,
+):
+    """
+    Atomically reserve one available counsellor slot
+    and create a pending appointment.
+
+    The slot is locked during the transaction to prevent
+    two users from booking the same appointment time.
+    """
+
+    connection = get_database_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        connection.start_transaction()
+
+        cursor.execute(
+            """
+            SELECT
+                cas.id,
+                cas.counsellor_profile_id,
+                cas.slot_date,
+                cas.start_time,
+                cas.is_booked
+            FROM counsellor_availability_slots cas
+            JOIN counsellor_profiles cp
+                ON cp.id = cas.counsellor_profile_id
+            JOIN users u
+                ON u.id = cp.user_id
+            WHERE
+                cas.id = %s
+                AND cas.is_booked = FALSE
+                AND cas.slot_date >= CURDATE()
+                AND cp.is_available = TRUE
+                AND u.is_active = TRUE
+                AND u.role = 'counsellor'
+            LIMIT 1
+            FOR UPDATE
+            """,
+            (availability_slot_id,),
+        )
+
+        slot = cursor.fetchone()
+
+        if slot is None:
+            connection.rollback()
+            return None
+
+        cursor.execute(
+            """
+            INSERT INTO appointments (
+                user_id,
+                counsellor_profile_id,
+                availability_slot_id,
+                appointment_date,
+                start_time,
+                status
+            )
+            VALUES (%s, %s, %s, %s, %s, 'pending')
+            """,
+            (
+                user_id,
+                slot["counsellor_profile_id"],
+                slot["id"],
+                slot["slot_date"],
+                slot["start_time"],
+            ),
+        )
+
+        appointment_id = cursor.lastrowid
+
+        cursor.execute(
+            """
+            UPDATE counsellor_availability_slots
+            SET is_booked = TRUE
+            WHERE
+                id = %s
+                AND is_booked = FALSE
+            """,
+            (slot["id"],),
+        )
+
+        if cursor.rowcount != 1:
+            connection.rollback()
+            return None
+
+        connection.commit()
+
+        return appointment_id
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        connection.close()
+
+
 def get_appointments_by_user(
     user_id: int,
 ):
@@ -80,6 +184,7 @@ def get_appointments_by_user(
             a.start_time,
             a.status,
             a.created_at,
+            a.availability_slot_id,
             cp.id AS counsellor_profile_id,
             u.full_name AS counsellor_name,
             cp.specialization
@@ -132,6 +237,7 @@ def get_appointments_for_counsellor(
             a.start_time,
             a.status,
             a.created_at,
+            a.availability_slot_id,
             cp.id AS counsellor_profile_id,
             cp.specialization
         FROM appointments a
@@ -176,8 +282,11 @@ def update_appointment_status(
     status: str,
 ):
     """
-    Update an appointment status only when the appointment
-    belongs to the logged-in counsellor.
+    Update an appointment only when it belongs to
+    the logged-in counsellor.
+
+    Rejected or cancelled appointments release their
+    associated availability slot for future booking.
     """
 
     allowed_statuses = {
@@ -191,30 +300,73 @@ def update_appointment_status(
         return False
 
     connection = get_database_connection()
-    cursor = connection.cursor()
+    cursor = connection.cursor(dictionary=True)
 
-    cursor.execute(
-        """
-        UPDATE appointments a
-        JOIN counsellor_profiles cp
-            ON cp.id = a.counsellor_profile_id
-        SET a.status = %s
-        WHERE
-            a.id = %s
-            AND cp.user_id = %s
-        """,
-        (
-            status,
-            appointment_id,
-            counsellor_user_id,
-        ),
-    )
+    try:
+        connection.start_transaction()
 
-    connection.commit()
+        cursor.execute(
+            """
+            SELECT
+                a.id,
+                a.status,
+                a.availability_slot_id
+            FROM appointments a
+            JOIN counsellor_profiles cp
+                ON cp.id = a.counsellor_profile_id
+            WHERE
+                a.id = %s
+                AND cp.user_id = %s
+            LIMIT 1
+            FOR UPDATE
+            """,
+            (
+                appointment_id,
+                counsellor_user_id,
+            ),
+        )
 
-    updated = cursor.rowcount > 0
+        appointment = cursor.fetchone()
 
-    cursor.close()
-    connection.close()
+        if appointment is None:
+            connection.rollback()
+            return False
 
-    return updated
+        cursor.execute(
+            """
+            UPDATE appointments
+            SET status = %s
+            WHERE id = %s
+            """,
+            (
+                status,
+                appointment_id,
+            ),
+        )
+
+        if (
+            status in {"rejected", "cancelled"}
+            and appointment["availability_slot_id"] is not None
+        ):
+            cursor.execute(
+                """
+                UPDATE counsellor_availability_slots
+                SET is_booked = FALSE
+                WHERE id = %s
+                """,
+                (
+                    appointment["availability_slot_id"],
+                ),
+            )
+
+        connection.commit()
+
+        return True
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        connection.close()

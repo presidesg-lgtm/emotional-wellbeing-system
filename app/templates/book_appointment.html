@@ -23,6 +23,7 @@
         <section class="analysis-card auth-card">
 
             <div class="user-bar">
+
                 <span>
                     Signed in as
                     <strong>
@@ -31,28 +32,36 @@
                 </span>
 
                 <div class="user-actions">
+
                     <a
                         href="{{ url_for('counsellors.counsellor_list') }}"
                         class="secondary-link-button"
                     >
                         Back to Counsellors
                     </a>
+
                 </div>
+
             </div>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% with messages =
+                get_flashed_messages(with_categories=true)
+            %}
                 {% if messages %}
                     {% for category, message in messages %}
+
                         <div
                             class="message {{ category }}-message"
                         >
                             {{ message }}
                         </div>
+
                     {% endfor %}
                 {% endif %}
             {% endwith %}
 
             <div class="heading-group">
+
                 <p class="eyebrow">
                     Appointment Request
                 </p>
@@ -62,11 +71,13 @@
                 </h1>
 
                 <p class="intro-text">
-                    Request an appointment with
+                    Select one of the appointment times made
+                    available by
                     <strong>
                         {{ counsellor.full_name }}
                     </strong>.
                 </p>
+
             </div>
 
             <div class="booking-counsellor-summary">
@@ -85,40 +96,68 @@
 
             </div>
 
-            <form method="post">
+            {% if available_slots %}
 
-                <label for="appointment_date">
-                    Appointment date
-                </label>
+                <form method="post">
 
-                <input
-                    id="appointment_date"
-                    name="appointment_date"
-                    type="date"
-                    min="{{ minimum_date }}"
-                    required
-                >
+                    <label for="availability_slot_id">
+                        Available appointment time
+                    </label>
 
-                <label for="start_time">
-                    Preferred start time
-                </label>
+                    <select
+                        id="availability_slot_id"
+                        name="availability_slot_id"
+                        required
+                    >
 
-                <input
-                    id="start_time"
-                    name="start_time"
-                    type="time"
-                    required
-                >
+                        <option value="">
+                            Select an available date and time
+                        </option>
 
-                <button type="submit">
-                    Submit Appointment Request
-                </button>
+                        {% for slot in available_slots %}
 
-            </form>
+                            <option value="{{ slot.id }}">
+                                {{
+                                    slot.slot_date.strftime(
+                                        "%d %b %Y"
+                                    )
+                                }}
+                                at
+                                {{ slot.formatted_start_time }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                    <button type="submit">
+                        Submit Appointment Request
+                    </button>
+
+                </form>
+
+            {% else %}
+
+                <div class="empty-history">
+
+                    <h2>
+                        No appointment times are currently available
+                    </h2>
+
+                    <p>
+                        This counsellor has not published any
+                        available appointment slots. Please check
+                        again later or select another counsellor.
+                    </p>
+
+                </div>
+
+            {% endif %}
 
             <p class="disclaimer">
-                Appointment requests remain pending until
-                reviewed by the selected counsellor.
+                Only times published as available by the selected
+                counsellor can be booked. Appointment requests
+                remain pending until reviewed by the counsellor.
             </p>
 
         </section>

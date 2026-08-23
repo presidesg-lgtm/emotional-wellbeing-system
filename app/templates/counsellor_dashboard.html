@@ -24,6 +24,7 @@
         <section class="analysis-card dashboard-card">
 
             <div class="user-bar">
+
                 <span>
                     Counsellor:
                     <strong>
@@ -32,6 +33,7 @@
                 </span>
 
                 <div class="user-actions">
+
                     <form
                         method="post"
                         action="{{ url_for('auth.logout') }}"
@@ -43,7 +45,9 @@
                             Log out
                         </button>
                     </form>
+
                 </div>
+
             </div>
 
             {% with messages =
@@ -51,16 +55,19 @@
             %}
                 {% if messages %}
                     {% for category, message in messages %}
+
                         <div
                             class="message {{ category }}-message"
                         >
                             {{ message }}
                         </div>
+
                     {% endfor %}
                 {% endif %}
             {% endwith %}
 
             <div class="heading-group">
+
                 <p class="eyebrow">
                     Counsellor Portal
                 </p>
@@ -70,203 +77,415 @@
                 </h1>
 
                 <p class="intro-text">
-                    Review appointment requests assigned
-                    to your counsellor profile and update
-                    their status.
+                    Publish available appointment times and
+                    manage appointment requests assigned to
+                    your counsellor profile.
                 </p>
+
             </div>
 
-            {% if appointments %}
+            <section class="forum-compose-section">
 
-                <div class="counsellor-appointment-list">
+                <div class="section-heading">
 
-                    {% for appointment in appointments %}
+                    <h2>
+                        Appointment Availability
+                    </h2>
 
-                        <article class="counsellor-appointment-card">
+                    <p>
+                        Add dates and times when you are
+                        available to receive appointment requests.
+                    </p>
 
-                            <div class="appointment-card-heading">
+                </div>
 
-                                <div>
-                                    <p class="result-label">
-                                        Appointment #{{ appointment.id }}
-                                    </p>
+                <form
+                    method="post"
+                    action="{{
+                        url_for(
+                            'counsellor_portal.add_availability'
+                        )
+                    }}"
+                >
 
-                                    <h2>
-                                        {{ appointment.user_name }}
-                                    </h2>
+                    <label for="slot_date">
+                        Available date
+                    </label>
+
+                    <input
+                        id="slot_date"
+                        name="slot_date"
+                        type="date"
+                        min="{{ minimum_date }}"
+                        required
+                    >
+
+                    <label for="availability_start_time">
+                        Start time
+                    </label>
+
+                    <input
+                        id="availability_start_time"
+                        name="start_time"
+                        type="time"
+                        required
+                    >
+
+                    <button type="submit">
+                        Add Available Time
+                    </button>
+
+                </form>
+
+            </section>
+
+            <section class="recent-section">
+
+                <div class="section-heading">
+
+                    <h2>
+                        Published Availability
+                    </h2>
+
+                    <p>
+                        Booked slots remain visible but cannot
+                        be removed while they are reserved.
+                    </p>
+
+                </div>
+
+                {% if availability_slots %}
+
+                    <div class="counsellor-appointment-list">
+
+                        {% for slot in availability_slots %}
+
+                            <article class="counsellor-appointment-card">
+
+                                <div class="appointment-card-heading">
+
+                                    <div>
+
+                                        <p class="result-label">
+                                            Availability #{{ slot.id }}
+                                        </p>
+
+                                        <h2>
+                                            {{
+                                                slot.slot_date.strftime(
+                                                    "%d %b %Y"
+                                                )
+                                            }}
+                                            at
+                                            {{ slot.formatted_start_time }}
+                                        </h2>
+
+                                    </div>
+
+                                    {% if slot.is_booked %}
+
+                                        <span
+                                            class="
+                                                appointment-status
+                                                appointment-status-confirmed
+                                            "
+                                        >
+                                            Booked
+                                        </span>
+
+                                    {% else %}
+
+                                        <span
+                                            class="
+                                                appointment-status
+                                                appointment-status-pending
+                                            "
+                                        >
+                                            Available
+                                        </span>
+
+                                    {% endif %}
+
                                 </div>
 
-                                <span
-                                    class="
-                                        appointment-status
-                                        appointment-status-{{ appointment.status }}
-                                    "
-                                >
-                                    {{ appointment.status | title }}
-                                </span>
+                                {% if not slot.is_booked %}
 
-                            </div>
+                                    <div class="appointment-actions">
 
-                            <div class="appointment-details">
-
-                                <p>
-                                    <strong>
-                                        Date:
-                                    </strong>
-
-                                    {{
-                                        appointment.appointment_date.strftime(
-                                            "%d %b %Y"
-                                        )
-                                    }}
-                                </p>
-
-                                <p>
-                                    <strong>
-                                        Time:
-                                    </strong>
-
-                                    {{ appointment.formatted_start_time }}
-                                </p>
-
-                                <p>
-                                    <strong>
-                                        User email:
-                                    </strong>
-
-                                    {{ appointment.user_email }}
-                                </p>
-
-                            </div>
-
-                            <div class="appointment-actions">
-
-                                {% if appointment.status == "pending" %}
-
-                                    <form
-                                        method="post"
-                                        action="{{
-                                            url_for(
-                                                'counsellor_portal.update_status',
-                                                appointment_id=appointment.id
-                                            )
-                                        }}"
-                                    >
-                                        <input
-                                            type="hidden"
-                                            name="action"
-                                            value="confirm"
+                                        <form
+                                            method="post"
+                                            action="{{
+                                                url_for(
+                                                    'counsellor_portal.delete_availability',
+                                                    slot_id=slot.id
+                                                )
+                                            }}"
                                         >
 
-                                        <button
-                                            type="submit"
-                                            class="appointment-confirm-button"
-                                        >
-                                            Confirm
-                                        </button>
-                                    </form>
+                                            <button
+                                                type="submit"
+                                                class="appointment-cancel-button"
+                                            >
+                                                Remove Slot
+                                            </button>
 
-                                    <form
-                                        method="post"
-                                        action="{{
-                                            url_for(
-                                                'counsellor_portal.update_status',
-                                                appointment_id=appointment.id
-                                            )
-                                        }}"
-                                    >
-                                        <input
-                                            type="hidden"
-                                            name="action"
-                                            value="reject"
-                                        >
+                                        </form>
 
-                                        <button
-                                            type="submit"
-                                            class="appointment-reject-button"
-                                        >
-                                            Reject
-                                        </button>
-                                    </form>
-
-                                {% elif appointment.status == "confirmed" %}
-
-                                    <form
-                                        method="post"
-                                        action="{{
-                                            url_for(
-                                                'counsellor_portal.update_status',
-                                                appointment_id=appointment.id
-                                            )
-                                        }}"
-                                    >
-                                        <input
-                                            type="hidden"
-                                            name="action"
-                                            value="complete"
-                                        >
-
-                                        <button
-                                            type="submit"
-                                            class="appointment-complete-button"
-                                        >
-                                            Mark Completed
-                                        </button>
-                                    </form>
-
-                                    <form
-                                        method="post"
-                                        action="{{
-                                            url_for(
-                                                'counsellor_portal.update_status',
-                                                appointment_id=appointment.id
-                                            )
-                                        }}"
-                                    >
-                                        <input
-                                            type="hidden"
-                                            name="action"
-                                            value="cancel"
-                                        >
-
-                                        <button
-                                            type="submit"
-                                            class="appointment-cancel-button"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </form>
+                                    </div>
 
                                 {% else %}
 
                                     <span class="appointment-no-action">
-                                        No further action required
+                                        Reserved by an appointment request
                                     </span>
 
                                 {% endif %}
 
-                            </div>
+                            </article>
 
-                        </article>
+                        {% endfor %}
 
-                    {% endfor %}
+                    </div>
 
-                </div>
+                {% else %}
 
-            {% else %}
+                    <div class="empty-history">
 
-                <div class="empty-history">
+                        <h2>
+                            No availability published
+                        </h2>
+
+                        <p>
+                            Add a future date and time above
+                            so users can request an appointment.
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+            <section class="recent-section">
+
+                <div class="section-heading">
+
                     <h2>
-                        No appointments found
+                        Appointment Requests
                     </h2>
 
                     <p>
-                        There are currently no appointment
-                        requests assigned to your account.
+                        Review requests that have been booked
+                        against your available appointment times.
                     </p>
+
                 </div>
 
-            {% endif %}
+                {% if appointments %}
+
+                    <div class="counsellor-appointment-list">
+
+                        {% for appointment in appointments %}
+
+                            <article class="counsellor-appointment-card">
+
+                                <div class="appointment-card-heading">
+
+                                    <div>
+
+                                        <p class="result-label">
+                                            Appointment #{{ appointment.id }}
+                                        </p>
+
+                                        <h2>
+                                            {{ appointment.user_name }}
+                                        </h2>
+
+                                    </div>
+
+                                    <span
+                                        class="
+                                            appointment-status
+                                            appointment-status-{{ appointment.status }}
+                                        "
+                                    >
+                                        {{ appointment.status | title }}
+                                    </span>
+
+                                </div>
+
+                                <div class="appointment-details">
+
+                                    <p>
+                                        <strong>
+                                            Date:
+                                        </strong>
+
+                                        {{
+                                            appointment.appointment_date.strftime(
+                                                "%d %b %Y"
+                                            )
+                                        }}
+                                    </p>
+
+                                    <p>
+                                        <strong>
+                                            Time:
+                                        </strong>
+
+                                        {{ appointment.formatted_start_time }}
+                                    </p>
+
+                                    <p>
+                                        <strong>
+                                            User email:
+                                        </strong>
+
+                                        {{ appointment.user_email }}
+                                    </p>
+
+                                </div>
+
+                                <div class="appointment-actions">
+
+                                    {% if appointment.status == "pending" %}
+
+                                        <form
+                                            method="post"
+                                            action="{{
+                                                url_for(
+                                                    'counsellor_portal.update_status',
+                                                    appointment_id=appointment.id
+                                                )
+                                            }}"
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="action"
+                                                value="confirm"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="appointment-confirm-button"
+                                            >
+                                                Confirm
+                                            </button>
+
+                                        </form>
+
+                                        <form
+                                            method="post"
+                                            action="{{
+                                                url_for(
+                                                    'counsellor_portal.update_status',
+                                                    appointment_id=appointment.id
+                                                )
+                                            }}"
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="action"
+                                                value="reject"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="appointment-reject-button"
+                                            >
+                                                Reject
+                                            </button>
+
+                                        </form>
+
+                                    {% elif appointment.status == "confirmed" %}
+
+                                        <form
+                                            method="post"
+                                            action="{{
+                                                url_for(
+                                                    'counsellor_portal.update_status',
+                                                    appointment_id=appointment.id
+                                                )
+                                            }}"
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="action"
+                                                value="complete"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="appointment-complete-button"
+                                            >
+                                                Mark Completed
+                                            </button>
+
+                                        </form>
+
+                                        <form
+                                            method="post"
+                                            action="{{
+                                                url_for(
+                                                    'counsellor_portal.update_status',
+                                                    appointment_id=appointment.id
+                                                )
+                                            }}"
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="action"
+                                                value="cancel"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="appointment-cancel-button"
+                                            >
+                                                Cancel
+                                            </button>
+
+                                        </form>
+
+                                    {% else %}
+
+                                        <span class="appointment-no-action">
+                                            No further action required
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </article>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-history">
+
+                        <h2>
+                            No appointments found
+                        </h2>
+
+                        <p>
+                            There are currently no appointment
+                            requests assigned to your account.
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
 
         </section>
     </main>

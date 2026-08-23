@@ -1,5 +1,3 @@
-from datetime import date
-
 from flask import (
     Blueprint,
     flash,
@@ -11,11 +9,12 @@ from flask import (
 )
 
 from app.repositories.appointment_repository import (
-    create_appointment,
+    create_appointment_from_slot,
 )
 
 from app.repositories.counsellor_repository import (
     get_available_counsellors,
+    get_available_slots_for_profile,
     get_counsellor_profile_by_id,
 )
 
@@ -70,8 +69,8 @@ def counsellor_list():
 )
 def book_appointment(profile_id: int):
     """
-    Display the booking form and create a pending
-    appointment request for the selected counsellor.
+    Display available appointment slots and allow
+    the user to reserve one slot.
     """
 
     access_response = user_access_required()
@@ -95,59 +94,79 @@ def book_appointment(profile_id: int):
             )
         )
 
+    available_slots = get_available_slots_for_profile(
+        profile_id
+    )
+
     if request.method == "POST":
-        appointment_date = request.form.get(
-            "appointment_date",
+
+        slot_id_text = request.form.get(
+            "availability_slot_id",
             "",
         ).strip()
 
-        start_time = request.form.get(
-            "start_time",
-            "",
-        ).strip()
+        try:
+            slot_id = int(slot_id_text)
 
-        if not appointment_date:
+        except (TypeError, ValueError):
             flash(
-                "Please select an appointment date.",
+                "Please select an available appointment time.",
                 "error",
             )
 
             return render_template(
                 "book_appointment.html",
                 counsellor=counsellor,
-                minimum_date=date.today().isoformat(),
+                available_slots=available_slots,
             )
 
-        if not start_time:
+        valid_slot_ids = {
+            slot["id"]
+            for slot in available_slots
+        }
+
+        if slot_id not in valid_slot_ids:
             flash(
-                "Please select an appointment time.",
+                "That appointment time is no longer available. "
+                "Please select another slot.",
                 "error",
+            )
+
+            available_slots = (
+                get_available_slots_for_profile(
+                    profile_id
+                )
             )
 
             return render_template(
                 "book_appointment.html",
                 counsellor=counsellor,
-                minimum_date=date.today().isoformat(),
+                available_slots=available_slots,
             )
 
-        if appointment_date < date.today().isoformat():
-            flash(
-                "Appointment date cannot be in the past.",
-                "error",
-            )
-
-            return render_template(
-                "book_appointment.html",
-                counsellor=counsellor,
-                minimum_date=date.today().isoformat(),
-            )
-
-        appointment_id = create_appointment(
+        appointment_id = create_appointment_from_slot(
             user_id=session["user_id"],
-            counsellor_profile_id=profile_id,
-            appointment_date=appointment_date,
-            start_time=start_time,
+            availability_slot_id=slot_id,
         )
+
+        if appointment_id is None:
+            flash(
+                "That appointment time is no longer available. "
+                "Please select another slot.",
+                "error",
+            )
+
+            available_slots = (
+                get_available_slots_for_profile(
+                    profile_id
+                )
+            )
+
+            return render_template(
+                "book_appointment.html",
+                counsellor=counsellor,
+                available_slots=available_slots,
+            )
 
         flash(
             "Appointment request submitted successfully. "
@@ -157,12 +176,12 @@ def book_appointment(profile_id: int):
 
         return redirect(
             url_for(
-                "counsellors.counsellor_list"
+                "appointments.my_appointments"
             )
         )
 
     return render_template(
         "book_appointment.html",
         counsellor=counsellor,
-        minimum_date=date.today().isoformat(),
+        available_slots=available_slots,
     )
