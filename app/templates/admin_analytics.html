@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Admin Analytics | Emotional Wellbeing Analysis System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+        <section class="analysis-card dashboard-card">
+
+            <div class="user-bar">
+
+                <span>
+                    Administrator:
+                    <strong>
+                        {{ session.get("full_name") }}
+                    </strong>
+                </span>
+
+                <div class="user-actions">
+
+                    <a
+                        href="{{ url_for('admin.dashboard') }}"
+                        class="secondary-link-button"
+                    >
+                        Main Admin Dashboard
+                    </a>
+
+                    <a
+                        href="{{ url_for('admin.management') }}"
+                        class="secondary-link-button"
+                    >
+                        Counsellor & Session Management
+                    </a>
+
+                    <a
+                        href="{{ url_for('admin.download_analytics_report') }}"
+                        class="primary-link-button"
+                    >
+                        Download CSV Report
+                    </a>
+
+                    <form
+                        method="post"
+                        action="{{ url_for('auth.logout') }}"
+                    >
+                        <button
+                            type="submit"
+                            class="logout-button"
+                        >
+                            Log out
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+
+            <div class="heading-group">
+
+                <p class="eyebrow">
+                    System Monitoring
+                </p>
+
+                <h1>
+                    Engagement & Analytics Report
+                </h1>
+
+                <p class="intro-text">
+                    Monitor aggregate platform engagement,
+                    counselling activity, emotion-label trends,
+                    and counsellor workload without exposing
+                    private emotional-analysis text.
+                </p>
+
+            </div>
+
+            <section class="recent-section">
+
+                <div class="section-heading">
+                    <h2>System Overview</h2>
+                    <p>
+                        High-level operational counts across
+                        the platform.
+                    </p>
+                </div>
+
+                <div class="admin-statistics-grid">
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Mood analyses
+                        </p>
+                        <h2>
+                            {{ overview.total_analyses }}
+                        </h2>
+                    </article>
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Appointments
+                        </p>
+                        <h2>
+                            {{ overview.total_appointments }}
+                        </h2>
+                    </article>
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Completed sessions
+                        </p>
+                        <h2>
+                            {{ overview.completed_appointments }}
+                        </h2>
+                    </article>
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Forum posts
+                        </p>
+                        <h2>
+                            {{ overview.total_forum_posts }}
+                        </h2>
+                    </article>
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Forum reports
+                        </p>
+                        <h2>
+                            {{ overview.total_forum_reports }}
+                        </h2>
+                    </article>
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Counsellor assignments
+                        </p>
+                        <h2>
+                            {{ overview.total_assignments }}
+                        </h2>
+                    </article>
+
+                </div>
+
+            </section>
+
+            <section class="recent-section">
+
+                <div class="section-heading">
+                    <h2>User Engagement</h2>
+                    <p>
+                        Engagement is counted when a normal user
+                        has used mood analysis, appointments,
+                        or the community forum.
+                    </p>
+                </div>
+
+                <div class="admin-statistics-grid">
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Normal users
+                        </p>
+                        <h2>
+                            {{ engagement.total_normal_users }}
+                        </h2>
+                    </article>
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Engaged users
+                        </p>
+                        <h2>
+                            {{ engagement.engaged_users }}
+                        </h2>
+                    </article>
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Engagement rate
+                        </p>
+                        <h2>
+                            {{ engagement.engagement_rate }}%
+                        </h2>
+                    </article>
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Analyses in last 7 days
+                        </p>
+                        <h2>
+                            {{ engagement.mood_analyses_last_7_days }}
+                        </h2>
+                    </article>
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Appointments in last 7 days
+                        </p>
+                        <h2>
+                            {{ engagement.appointments_last_7_days }}
+                        </h2>
+                    </article>
+
+                    <article class="summary-card">
+                        <p class="summary-label">
+                            Forum posts in last 7 days
+                        </p>
+                        <h2>
+                            {{ engagement.forum_posts_last_7_days }}
+                        </h2>
+                    </article>
+
+                </div>
+
+            </section>
+
+            <section class="recent-section">
+
+                <div class="section-heading">
+                    <h2>Aggregate Emotion Distribution</h2>
+                    <p>
+                        Only predicted emotion labels and aggregate
+                        counts are included. Submitted mood text and
+                        user identities are not displayed.
+                    </p>
+                </div>
+
+                {% if emotion_distribution %}
+
+                    <div class="admin-table-wrapper">
+
+                        <table class="admin-user-table">
+                            <thead>
+                                <tr>
+                                    <th>Emotion</th>
+                                    <th>Analyses</th>
+                                    <th>Share</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for emotion in emotion_distribution %}
+                                    <tr>
+                                        <td>
+                                            {{ emotion.emotion }}
+                                        </td>
+                                        <td>
+                                            {{ emotion.count }}
+                                        </td>
+                                        <td>
+                                            {{ emotion.percentage }}%
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-history">
+                        <p>No mood analyses have been recorded.</p>
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+            <section class="recent-section">
+
+                <div class="section-heading">
+                    <h2>Appointment Status Report</h2>
+                    <p>
+                        Distribution of counselling appointment
+                        records by current status.
+                    </p>
+                </div>
+
+                {% if appointment_statuses %}
+
+                    <div class="admin-table-wrapper">
+
+                        <table class="admin-user-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Appointments</th>
+                                    <th>Share</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for item in appointment_statuses %}
+                                    <tr>
+                                        <td>
+                                            <span
+                                                class="
+                                                    appointment-status
+                                                    appointment-status-{{ item.status }}
+                                                "
+                                            >
+                                                {{ item.status | title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {{ item.count }}
+                                        </td>
+                                        <td>
+                                            {{ item.percentage }}%
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-history">
+                        <p>No appointments have been recorded.</p>
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+            <section class="recent-section">
+
+                <div class="section-heading">
+                    <h2>Counsellor Workload</h2>
+                    <p>
+                        Aggregate appointment and assignment counts
+                        for each counsellor.
+                    </p>
+                </div>
+
+                {% if counsellor_workload %}
+
+                    <div class="admin-table-wrapper">
+
+                        <table class="admin-user-table">
+                            <thead>
+                                <tr>
+                                    <th>Counsellor</th>
+                                    <th>Total appointments</th>
+                                    <th>Pending</th>
+                                    <th>Confirmed</th>
+                                    <th>Completed</th>
+                                    <th>Assigned users</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for counsellor in counsellor_workload %}
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                {{ counsellor.counsellor_name }}
+                                            </strong>
+                                            <br>
+                                            <small>
+                                                {{ counsellor.specialization }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            {{ counsellor.total_appointments }}
+                                        </td>
+                                        <td>
+                                            {{ counsellor.pending_appointments }}
+                                        </td>
+                                        <td>
+                                            {{ counsellor.confirmed_appointments }}
+                                        </td>
+                                        <td>
+                                            {{ counsellor.completed_appointments }}
+                                        </td>
+                                        <td>
+                                            {{ counsellor.assigned_users }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+            <section class="recent-section">
+
+                <div class="section-heading">
+                    <h2>Recent Platform Activity</h2>
+                    <p>
+                        Aggregate activity recorded during the
+                        last seven days.
+                    </p>
+                </div>
+
+                {% if recent_activity %}
+
+                    <div class="admin-table-wrapper">
+
+                        <table class="admin-user-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Mood analyses</th>
+                                    <th>Appointments created</th>
+                                    <th>Forum posts</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for activity in recent_activity %}
+                                    <tr>
+                                        <td>
+                                            {{
+                                                activity.activity_date.strftime(
+                                                    "%d %b %Y"
+                                                )
+                                            }}
+                                        </td>
+                                        <td>
+                                            {{ activity.mood_analyses }}
+                                        </td>
+                                        <td>
+                                            {{ activity.appointments }}
+                                        </td>
+                                        <td>
+                                            {{ activity.forum_posts }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-history">
+                        <p>
+                            No platform activity was recorded
+                            during the last seven days.
+                        </p>
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+            <div class="admin-notice">
+
+                <strong>
+                    Privacy-aware analytics
+                </strong>
+
+                <p>
+                    This report uses aggregate operational data.
+                    Administrators can see emotion-label counts,
+                    engagement totals, appointment status,
+                    and workload information, but not users'
+                    submitted emotional-analysis text.
+                </p>
+
+            </div>
+
+        </section>
+    </main>
+</body>
+</html>

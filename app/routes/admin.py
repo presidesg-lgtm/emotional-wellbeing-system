@@ -1,7 +1,10 @@
+import csv
+from io import StringIO
 from pathlib import Path
 
 from flask import (
     Blueprint,
+    Response,
     abort,
     flash,
     redirect,
@@ -13,6 +16,16 @@ from flask import (
 )
 
 from werkzeug.security import generate_password_hash
+
+
+from app.repositories.analytics_repository import (
+    get_admin_appointment_status_distribution,
+    get_admin_counsellor_workload,
+    get_admin_emotion_distribution,
+    get_admin_engagement_summary,
+    get_admin_recent_activity,
+    get_admin_system_overview,
+)
 
 from app.repositories.appointment_repository import (
     get_all_appointments_for_admin,
@@ -121,6 +134,217 @@ def dashboard():
         forum_reports=forum_reports,
         forum_posts=forum_posts,
     )
+
+
+
+@admin_blueprint.get("/analytics")
+def analytics():
+    """
+    Display privacy-aware aggregate system analytics
+    and engagement reporting.
+    """
+
+    access_response = admin_access_required()
+
+    if access_response is not None:
+        return access_response
+
+    return render_template(
+        "admin_analytics.html",
+        overview=get_admin_system_overview(),
+        engagement=get_admin_engagement_summary(),
+        emotion_distribution=get_admin_emotion_distribution(),
+        appointment_statuses=(
+            get_admin_appointment_status_distribution()
+        ),
+        counsellor_workload=get_admin_counsellor_workload(),
+        recent_activity=get_admin_recent_activity(),
+    )
+
+
+@admin_blueprint.get("/analytics/report.csv")
+def download_analytics_report():
+    """
+    Generate a downloadable aggregate CSV analytics report.
+
+    The export contains no submitted emotional-analysis text.
+    """
+
+    access_response = admin_access_required()
+
+    if access_response is not None:
+        return access_response
+
+    overview = get_admin_system_overview()
+    engagement = get_admin_engagement_summary()
+    emotion_distribution = get_admin_emotion_distribution()
+    appointment_statuses = (
+        get_admin_appointment_status_distribution()
+    )
+    counsellor_workload = get_admin_counsellor_workload()
+    recent_activity = get_admin_recent_activity()
+
+    output = StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(
+        [
+            "Emotional Wellbeing Analysis System",
+            "Administrator Analytics Report",
+        ]
+    )
+    writer.writerow([])
+
+    writer.writerow(["System Overview"])
+    writer.writerow(["Metric", "Value"])
+
+    overview_labels = {
+        "total_analyses": "Total mood analyses",
+        "users_with_mood_analyses": "Users with mood analyses",
+        "total_appointments": "Total appointments",
+        "users_with_appointments": "Users with appointments",
+        "pending_appointments": "Pending appointments",
+        "confirmed_appointments": "Confirmed appointments",
+        "completed_appointments": "Completed appointments",
+        "rejected_appointments": "Rejected appointments",
+        "cancelled_appointments": "Cancelled appointments",
+        "total_forum_posts": "Total forum posts",
+        "users_with_forum_posts": "Users with forum posts",
+        "visible_forum_posts": "Visible forum posts",
+        "hidden_forum_posts": "Hidden forum posts",
+        "total_forum_reports": "Total forum reports",
+        "pending_forum_reports": "Pending forum reports",
+        "total_assignments": "Current counsellor assignments",
+    }
+
+    for key, label in overview_labels.items():
+        writer.writerow(
+            [
+                label,
+                overview[key],
+            ]
+        )
+
+    writer.writerow([])
+    writer.writerow(["User Engagement"])
+    writer.writerow(["Metric", "Value"])
+
+    engagement_labels = {
+        "total_normal_users": "Total normal users",
+        "active_normal_users": "Active normal users",
+        "engaged_users": "Engaged users",
+        "engagement_rate": "Engagement rate (%)",
+        "mood_analyses_last_7_days": "Mood analyses - last 7 days",
+        "appointments_last_7_days": "Appointments - last 7 days",
+        "forum_posts_last_7_days": "Forum posts - last 7 days",
+    }
+
+    for key, label in engagement_labels.items():
+        writer.writerow(
+            [
+                label,
+                engagement[key],
+            ]
+        )
+
+    writer.writerow([])
+    writer.writerow(["Aggregate Emotion Distribution"])
+    writer.writerow(["Emotion", "Count", "Percentage"])
+
+    for item in emotion_distribution:
+        writer.writerow(
+            [
+                item["emotion"],
+                item["count"],
+                item["percentage"],
+            ]
+        )
+
+    writer.writerow([])
+    writer.writerow(["Appointment Status Distribution"])
+    writer.writerow(["Status", "Count", "Percentage"])
+
+    for item in appointment_statuses:
+        writer.writerow(
+            [
+                item["status"],
+                item["count"],
+                item["percentage"],
+            ]
+        )
+
+    writer.writerow([])
+    writer.writerow(["Counsellor Workload"])
+    writer.writerow(
+        [
+            "Counsellor",
+            "Specialization",
+            "Total appointments",
+            "Pending",
+            "Confirmed",
+            "Completed",
+            "Assigned users",
+        ]
+    )
+
+    for counsellor in counsellor_workload:
+        writer.writerow(
+            [
+                counsellor["counsellor_name"],
+                counsellor["specialization"],
+                counsellor["total_appointments"],
+                counsellor["pending_appointments"],
+                counsellor["confirmed_appointments"],
+                counsellor["completed_appointments"],
+                counsellor["assigned_users"],
+            ]
+        )
+
+    writer.writerow([])
+    writer.writerow(["Recent Platform Activity"])
+    writer.writerow(
+        [
+            "Date",
+            "Mood analyses",
+            "Appointments created",
+            "Forum posts",
+        ]
+    )
+
+    for activity in recent_activity:
+        writer.writerow(
+            [
+                activity["activity_date"].isoformat(),
+                activity["mood_analyses"],
+                activity["appointments"],
+                activity["forum_posts"],
+            ]
+        )
+
+    writer.writerow([])
+    writer.writerow(
+        [
+            "Privacy note",
+            (
+                "This aggregate report does not include users' "
+                "submitted emotional-analysis text."
+            ),
+        ]
+    )
+
+    response = Response(
+        output.getvalue(),
+        mimetype="text/csv",
+    )
+
+    response.headers[
+        "Content-Disposition"
+    ] = (
+        "attachment; "
+        "filename=admin-analytics-report.csv"
+    )
+
+    return response
 
 
 
