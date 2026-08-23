@@ -217,6 +217,79 @@ def get_all_users():
     return users
 
 
+
+
+def get_normal_users_for_admin():
+    """
+    Return normal user accounts for administrator
+    management and counsellor assignment.
+    """
+
+    connection = get_database_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            full_name,
+            email,
+            is_active,
+            created_at,
+            updated_at
+        FROM users
+        WHERE role = 'user'
+        ORDER BY full_name ASC, id ASC
+        """
+    )
+
+    users = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return users
+
+
+def update_admin_managed_user(
+    user_id: int,
+    full_name: str,
+    email: str,
+):
+    """
+    Update a normal user account from the administrator area.
+    The account role is intentionally unchanged.
+    """
+
+    connection = get_database_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        UPDATE users
+        SET
+            full_name = %s,
+            email = %s
+        WHERE
+            id = %s
+            AND role = 'user'
+        """,
+        (
+            full_name,
+            email,
+            user_id,
+        ),
+    )
+
+    connection.commit()
+
+    updated = cursor.rowcount > 0
+
+    cursor.close()
+    connection.close()
+
+    return updated
+
 def get_user_statistics():
     """
     Return aggregate account statistics for the admin dashboard.

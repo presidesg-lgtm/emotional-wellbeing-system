@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Management | Emotional Wellbeing Analysis System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main class="page-shell">
+        <section class="analysis-card dashboard-card">
+
+            <div class="user-bar">
+                <span>
+                    Administrator:
+                    <strong>{{ session.get("full_name") }}</strong>
+                </span>
+
+                <div class="user-actions">
+                    <a
+                        href="{{ url_for('admin.dashboard') }}"
+                        class="secondary-link-button"
+                    >
+                        Main Admin Dashboard
+                    </a>
+
+                    <form method="post" action="{{ url_for('auth.logout') }}">
+                        <button type="submit" class="logout-button">
+                            Log out
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="message {{ category }}-message">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="heading-group">
+                <p class="eyebrow">Administrative Management</p>
+                <h1>Counsellor & Session Management</h1>
+                <p class="intro-text">
+                    Create and update user or counsellor accounts,
+                    assign counsellors to users, and monitor
+                    counselling-session records.
+                </p>
+            </div>
+
+            <section class="recent-section">
+                <div class="section-heading">
+                    <h2>Create Normal User</h2>
+                    <p>Administrators can create user accounts when required.</p>
+                </div>
+
+                <form method="post" action="{{ url_for('admin.create_normal_user') }}">
+                    <label for="new-user-name">Full name</label>
+                    <input id="new-user-name" name="full_name" type="text" required>
+
+                    <label for="new-user-email">Email</label>
+                    <input id="new-user-email" name="email" type="email" required>
+
+                    <label for="new-user-password">Temporary password</label>
+                    <input id="new-user-password" name="password" type="password" minlength="8" required>
+
+                    <button type="submit">Create User Account</button>
+                </form>
+            </section>
+
+            <section class="recent-section">
+                <div class="section-heading">
+                    <h2>Manage Normal Users</h2>
+                    <p>Update account details or activation status.</p>
+                </div>
+
+                <div class="counsellor-appointment-list">
+                    {% for user in normal_users %}
+                        <article class="counsellor-appointment-card">
+                            <div class="appointment-card-heading">
+                                <div>
+                                    <p class="result-label">User #{{ user.id }}</p>
+                                    <h2>{{ user.full_name }}</h2>
+                                </div>
+
+                                {% if user.is_active %}
+                                    <span class="status-badge status-active">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-inactive">Inactive</span>
+                                {% endif %}
+                            </div>
+
+                            <form method="post" action="{{ url_for('admin.update_normal_user', user_id=user.id) }}">
+                                <label for="user-name-{{ user.id }}">Full name</label>
+                                <input id="user-name-{{ user.id }}" name="full_name" type="text" value="{{ user.full_name }}" required>
+
+                                <label for="user-email-{{ user.id }}">Email</label>
+                                <input id="user-email-{{ user.id }}" name="email" type="email" value="{{ user.email }}" required>
+
+                                <button type="submit">Update User</button>
+                            </form>
+
+                            <form method="post" action="{{ url_for('admin.update_account_status', user_id=user.id) }}">
+                                {% if user.is_active %}
+                                    <button type="submit" name="action" value="deactivate" class="appointment-reject-button">Deactivate User</button>
+                                {% else %}
+                                    <button type="submit" name="action" value="activate" class="appointment-confirm-button">Activate User</button>
+                                {% endif %}
+                            </form>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="recent-section">
+                <div class="section-heading">
+                    <h2>Create Counsellor</h2>
+                    <p>Create the login account and professional profile together.</p>
+                </div>
+
+                <form method="post" action="{{ url_for('admin.create_counsellor') }}">
+                    <label for="new-counsellor-name">Full name</label>
+                    <input id="new-counsellor-name" name="full_name" type="text" required>
+
+                    <label for="new-counsellor-email">Email</label>
+                    <input id="new-counsellor-email" name="email" type="email" required>
+
+                    <label for="new-counsellor-password">Temporary password</label>
+                    <input id="new-counsellor-password" name="password" type="password" minlength="8" required>
+
+                    <label for="new-counsellor-specialization">Specialization</label>
+                    <input id="new-counsellor-specialization" name="specialization" type="text" required>
+
+                    <label for="new-counsellor-qualifications">Qualifications</label>
+                    <input id="new-counsellor-qualifications" name="qualifications" type="text">
+
+                    <label for="new-counsellor-experience">Years of experience</label>
+                    <input id="new-counsellor-experience" name="years_experience" type="number" min="0" max="80" value="0" required>
+
+                    <label for="new-counsellor-bio">Professional bio</label>
+                    <textarea id="new-counsellor-bio" name="bio" rows="4"></textarea>
+
+                    <label>
+                        <input name="is_available" type="checkbox" checked>
+                        Available for appointments
+                    </label>
+
+                    <button type="submit">Create Counsellor Account</button>
+                </form>
+            </section>
+
+            <section class="recent-section">
+                <div class="section-heading">
+                    <h2>Manage Counsellors</h2>
+                    <p>Update professional information, availability, or account status.</p>
+                </div>
+
+                <div class="counsellor-appointment-list">
+                    {% for counsellor in counsellors %}
+                        <article class="counsellor-appointment-card">
+                            <div class="appointment-card-heading">
+                                <div>
+                                    <p class="result-label">Counsellor Profile #{{ counsellor.profile_id }}</p>
+                                    <h2>{{ counsellor.full_name }}</h2>
+                                </div>
+
+                                {% if counsellor.is_active %}
+                                    <span class="status-badge status-active">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-inactive">Inactive</span>
+                                {% endif %}
+                            </div>
+
+                            <form method="post" action="{{ url_for('admin.update_counsellor', profile_id=counsellor.profile_id) }}">
+                                <input type="hidden" name="counsellor_user_id" value="{{ counsellor.user_id }}">
+
+                                <label>Full name</label>
+                                <input name="full_name" type="text" value="{{ counsellor.full_name }}" required>
+
+                                <label>Email</label>
+                                <input name="email" type="email" value="{{ counsellor.email }}" required>
+
+                                <label>Specialization</label>
+                                <input name="specialization" type="text" value="{{ counsellor.specialization }}" required>
+
+                                <label>Qualifications</label>
+                                <input name="qualifications" type="text" value="{{ counsellor.qualifications or '' }}">
+
+                                <label>Years of experience</label>
+                                <input name="years_experience" type="number" min="0" max="80" value="{{ counsellor.years_experience }}" required>
+
+                                <label>Professional bio</label>
+                                <textarea name="bio" rows="4">{{ counsellor.bio or '' }}</textarea>
+
+                                <label>
+                                    <input name="is_available" type="checkbox" {% if counsellor.is_available %}checked{% endif %}>
+                                    Available for appointments
+                                </label>
+
+                                <button type="submit">Update Counsellor</button>
+                            </form>
+
+                            <form method="post" action="{{ url_for('admin.update_account_status', user_id=counsellor.user_id) }}">
+                                {% if counsellor.is_active %}
+                                    <button type="submit" name="action" value="deactivate" class="appointment-reject-button">Deactivate Counsellor</button>
+                                {% else %}
+                                    <button type="submit" name="action" value="activate" class="appointment-confirm-button">Activate Counsellor</button>
+                                {% endif %}
+                            </form>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="recent-section">
+                <div class="section-heading">
+                    <h2>Assign Counsellor to User</h2>
+                    <p>Assign an active counsellor based on support requirements and current availability.</p>
+                </div>
+
+                <form method="post" action="{{ url_for('admin.assign_counsellor') }}">
+                    <label for="assignment-user">User</label>
+                    <select id="assignment-user" name="user_id" required>
+                        <option value="">Select an active user</option>
+                        {% for user in normal_users %}
+                            {% if user.is_active %}
+                                <option value="{{ user.id }}">{{ user.full_name }} — {{ user.email }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+
+                    <label for="assignment-counsellor">Counsellor</label>
+                    <select id="assignment-counsellor" name="counsellor_profile_id" required>
+                        <option value="">Select an active counsellor</option>
+                        {% for counsellor in counsellors %}
+                            {% if counsellor.is_active %}
+                                <option value="{{ counsellor.profile_id }}">
+                                    {{ counsellor.full_name }} — {{ counsellor.specialization }}
+                                    {% if counsellor.is_available %}— Available{% else %}— Not currently available{% endif %}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+
+                    <label for="support-requirement">Support requirement</label>
+                    <input id="support-requirement" name="support_requirement" type="text" maxlength="255" placeholder="Example: stress and emotional wellbeing">
+
+                    <button type="submit">Assign Counsellor</button>
+                </form>
+
+                <div class="counsellor-appointment-list">
+                    {% for assignment in assignments %}
+                        <article class="counsellor-appointment-card">
+                            <p class="result-label">User #{{ assignment.user_id }}</p>
+                            <h2>{{ assignment.user_name }} → {{ assignment.counsellor_name }}</h2>
+
+                            <div class="appointment-details">
+                                <p><strong>Specialization:</strong> {{ assignment.specialization }}</p>
+                                <p><strong>Requirement:</strong> {{ assignment.support_requirement or "Not specified" }}</p>
+                                <p><strong>Assigned:</strong> {{ assignment.assigned_at.strftime("%d %b %Y %H:%M") }}</p>
+                            </div>
+
+                            <form method="post" action="{{ url_for('admin.remove_assignment', user_id=assignment.user_id) }}">
+                                <button type="submit" class="appointment-cancel-button">Remove Assignment</button>
+                            </form>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="recent-section">
+                <div class="section-heading">
+                    <h2>Counselling Session Monitoring</h2>
+                    <p>Monitor scheduling and session status without exposing private emotional-analysis text.</p>
+                </div>
+
+                {% if appointments %}
+                    <div class="admin-table-wrapper">
+                        <table class="admin-user-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Counsellor</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in appointments %}
+                                    <tr>
+                                        <td>#{{ appointment.id }}</td>
+                                        <td>{{ appointment.user_name }}<br><small>{{ appointment.user_email }}</small></td>
+                                        <td>{{ appointment.counsellor_name }}<br><small>{{ appointment.specialization }}</small></td>
+                                        <td>{{ appointment.appointment_date.strftime("%d %b %Y") }}</td>
+                                        <td>{{ appointment.formatted_start_time }}</td>
+                                        <td>
+                                            <span class="appointment-status appointment-status-{{ appointment.status }}">
+                                                {{ appointment.status | title }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-history"><p>No counselling sessions have been recorded.</p></div>
+                {% endif %}
+            </section>
+
+            <div class="admin-notice">
+                <strong>Privacy-aware administration</strong>
+                <p>
+                    Session monitoring shows scheduling and account information only.
+                    Private emotional-analysis text is not displayed to administrators.
+                </p>
+            </div>
+
+        </section>
+    </main>
+</body>
+</html>

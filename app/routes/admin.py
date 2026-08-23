@@ -12,6 +12,21 @@ from flask import (
     url_for,
 )
 
+from werkzeug.security import generate_password_hash
+
+from app.repositories.appointment_repository import (
+    get_all_appointments_for_admin,
+)
+
+from app.repositories.counsellor_repository import (
+    assign_counsellor_to_user,
+    create_counsellor_account,
+    get_all_counsellors_for_admin,
+    get_user_counsellor_assignments,
+    remove_counsellor_assignment,
+    update_counsellor_account,
+)
+
 from app.repositories.forum_repository import (
     get_all_forum_posts_for_admin,
     get_all_forum_reports,
@@ -26,8 +41,13 @@ from app.repositories.payment_repository import (
 )
 
 from app.repositories.user_repository import (
+    create_user,
+    find_user_by_email,
+    find_user_by_id,
     get_all_users,
+    get_normal_users_for_admin,
     get_user_statistics,
+    update_admin_managed_user,
     update_user_active_status,
 )
 
@@ -103,6 +123,288 @@ def dashboard():
     )
 
 
+
+@admin_blueprint.get("/management")
+def management():
+    """
+    Display administrator user, counsellor,
+    assignment, and session management.
+    """
+
+    access_response = admin_access_required()
+
+    if access_response is not None:
+        return access_response
+
+    return render_template(
+        "admin_management.html",
+        normal_users=get_normal_users_for_admin(),
+        counsellors=get_all_counsellors_for_admin(),
+        assignments=get_user_counsellor_assignments(),
+        appointments=get_all_appointments_for_admin(),
+    )
+
+
+@admin_blueprint.post("/management/users/create")
+def create_normal_user():
+    """Create a normal user account from the admin portal."""
+
+    access_response = admin_access_required()
+    if access_response is not None:
+        return access_response
+
+    full_name = request.form.get("full_name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+
+    if not full_name or not email or not password:
+        flash("Name, email, and password are required.", "error")
+        return redirect(url_for("admin.management"))
+
+    if len(password) < 8:
+        flash("Password must contain at least 8 characters.", "error")
+        return redirect(url_for("admin.management"))
+
+    if find_user_by_email(email) is not None:
+        flash("An account already uses that email address.", "error")
+        return redirect(url_for("admin.management"))
+
+    create_user(
+        full_name=full_name,
+        email=email,
+        password_hash=generate_password_hash(password),
+        role="user",
+    )
+
+    flash("User account created successfully.", "success")
+    return redirect(url_for("admin.management"))
+
+
+@admin_blueprint.post("/management/users/<int:user_id>/update")
+def update_normal_user(user_id: int):
+    """Update a normal user's name and email."""
+
+    access_response = admin_access_required()
+    if access_response is not None:
+        return access_response
+
+    target_user = find_user_by_id(user_id)
+
+    if target_user is None or target_user["role"] != "user":
+        flash("The selected normal user could not be found.", "error")
+        return redirect(url_for("admin.management"))
+
+    full_name = request.form.get("full_name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+
+    if not full_name or not email:
+        flash("Name and email are required.", "error")
+        return redirect(url_for("admin.management"))
+
+    existing = find_user_by_email(email)
+    if existing is not None and existing["id"] != user_id:
+        flash("Another account already uses that email address.", "error")
+        return redirect(url_for("admin.management"))
+
+    updated = update_admin_managed_user(
+        user_id=user_id,
+        full_name=full_name,
+        email=email,
+    )
+
+    flash(
+        "User account updated successfully."
+        if updated
+        else "User account could not be updated.",
+        "success" if updated else "error",
+    )
+
+    return redirect(url_for("admin.management"))
+
+
+@admin_blueprint.post("/management/counsellors/create")
+def create_counsellor():
+    """Create a counsellor account and professional profile."""
+
+    access_response = admin_access_required()
+    if access_response is not None:
+        return access_response
+
+    full_name = request.form.get("full_name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+    specialization = request.form.get("specialization", "").strip()
+    qualifications = request.form.get("qualifications", "").strip()
+    bio = request.form.get("bio", "").strip()
+    years_text = request.form.get("years_experience", "0").strip()
+    is_available = request.form.get("is_available") == "on"
+
+    if not full_name or not email or not password or not specialization:
+        flash(
+            "Name, email, password, and specialization are required.",
+            "error",
+        )
+        return redirect(url_for("admin.management"))
+
+    if len(password) < 8:
+        flash("Password must contain at least 8 characters.", "error")
+        return redirect(url_for("admin.management"))
+
+    try:
+        years_experience = int(years_text)
+    except ValueError:
+        years_experience = -1
+
+    if years_experience < 0 or years_experience > 80:
+        flash("Years of experience must be between 0 and 80.", "error")
+        return redirect(url_for("admin.management"))
+
+    if find_user_by_email(email) is not None:
+        flash("An account already uses that email address.", "error")
+        return redirect(url_for("admin.management"))
+
+    create_counsellor_account(
+        full_name=full_name,
+        email=email,
+        password_hash=generate_password_hash(password),
+        specialization=specialization,
+        qualifications=qualifications or None,
+        bio=bio or None,
+        years_experience=years_experience,
+        is_available=is_available,
+    )
+
+    flash("Counsellor account created successfully.", "success")
+    return redirect(url_for("admin.management"))
+
+
+@admin_blueprint.post(
+    "/management/counsellors/<int:profile_id>/update"
+)
+def update_counsellor(profile_id: int):
+    """Update counsellor account and profile details."""
+
+    access_response = admin_access_required()
+    if access_response is not None:
+        return access_response
+
+    full_name = request.form.get("full_name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    specialization = request.form.get("specialization", "").strip()
+    qualifications = request.form.get("qualifications", "").strip()
+    bio = request.form.get("bio", "").strip()
+    years_text = request.form.get("years_experience", "0").strip()
+    is_available = request.form.get("is_available") == "on"
+    counsellor_user_id = request.form.get("counsellor_user_id", type=int)
+
+    if (
+        not full_name
+        or not email
+        or not specialization
+        or counsellor_user_id is None
+    ):
+        flash("Name, email, and specialization are required.", "error")
+        return redirect(url_for("admin.management"))
+
+    try:
+        years_experience = int(years_text)
+    except ValueError:
+        years_experience = -1
+
+    if years_experience < 0 or years_experience > 80:
+        flash("Years of experience must be between 0 and 80.", "error")
+        return redirect(url_for("admin.management"))
+
+    existing = find_user_by_email(email)
+    if existing is not None and existing["id"] != counsellor_user_id:
+        flash("Another account already uses that email address.", "error")
+        return redirect(url_for("admin.management"))
+
+    updated = update_counsellor_account(
+        profile_id=profile_id,
+        full_name=full_name,
+        email=email,
+        specialization=specialization,
+        qualifications=qualifications or None,
+        bio=bio or None,
+        years_experience=years_experience,
+        is_available=is_available,
+    )
+
+    flash(
+        "Counsellor account updated successfully."
+        if updated
+        else "Counsellor account could not be updated.",
+        "success" if updated else "error",
+    )
+
+    return redirect(url_for("admin.management"))
+
+
+@admin_blueprint.post("/management/assignments")
+def assign_counsellor():
+    """Assign or reassign a counsellor to an active user."""
+
+    access_response = admin_access_required()
+    if access_response is not None:
+        return access_response
+
+    user_id = request.form.get("user_id", type=int)
+    counsellor_profile_id = request.form.get(
+        "counsellor_profile_id",
+        type=int,
+    )
+    support_requirement = request.form.get(
+        "support_requirement",
+        "",
+    ).strip()
+
+    if user_id is None or counsellor_profile_id is None:
+        flash("Please select both a user and a counsellor.", "error")
+        return redirect(url_for("admin.management"))
+
+    if len(support_requirement) > 255:
+        flash("Support requirement must not exceed 255 characters.", "error")
+        return redirect(url_for("admin.management"))
+
+    assigned = assign_counsellor_to_user(
+        user_id=user_id,
+        counsellor_profile_id=counsellor_profile_id,
+        assigned_by_admin_id=session["user_id"],
+        support_requirement=support_requirement or None,
+    )
+
+    flash(
+        "Counsellor assigned successfully."
+        if assigned
+        else "Counsellor assignment could not be completed.",
+        "success" if assigned else "error",
+    )
+
+    return redirect(url_for("admin.management"))
+
+
+@admin_blueprint.post(
+    "/management/assignments/<int:user_id>/remove"
+)
+def remove_assignment(user_id: int):
+    """Remove a user's current counsellor assignment."""
+
+    access_response = admin_access_required()
+    if access_response is not None:
+        return access_response
+
+    removed = remove_counsellor_assignment(user_id)
+
+    flash(
+        "Counsellor assignment removed successfully."
+        if removed
+        else "No counsellor assignment was found.",
+        "success" if removed else "error",
+    )
+
+    return redirect(url_for("admin.management"))
+
 @admin_blueprint.post(
     "/users/<int:user_id>/status"
 )
@@ -177,7 +479,8 @@ def update_account_status(user_id: int):
         )
 
     return redirect(
-        url_for("admin.dashboard")
+        request.referrer
+        or url_for("admin.dashboard")
     )
 
 

@@ -522,3 +522,55 @@ def update_appointment_status(
     finally:
         cursor.close()
         connection.close()
+
+
+def get_all_appointments_for_admin():
+    """
+    Return all counselling appointments for administrator
+    session monitoring without exposing private mood text.
+    """
+
+    connection = get_database_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT
+            a.id,
+            a.user_id,
+            uu.full_name AS user_name,
+            uu.email AS user_email,
+            a.counsellor_profile_id,
+            cu.full_name AS counsellor_name,
+            cp.specialization,
+            a.appointment_date,
+            a.start_time,
+            a.status,
+            a.created_at
+        FROM appointments a
+        JOIN users uu
+            ON uu.id = a.user_id
+        JOIN counsellor_profiles cp
+            ON cp.id = a.counsellor_profile_id
+        JOIN users cu
+            ON cu.id = cp.user_id
+        ORDER BY
+            a.appointment_date DESC,
+            a.start_time DESC,
+            a.id DESC
+        """
+    )
+
+    appointments = cursor.fetchall()
+
+    for appointment in appointments:
+        appointment['formatted_start_time'] = (
+            _format_start_time(
+                appointment['start_time']
+            )
+        )
+
+    cursor.close()
+    connection.close()
+
+    return appointments
