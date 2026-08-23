@@ -36,6 +36,41 @@ def find_user_by_email(email: str):
     return user
 
 
+def find_user_by_id(user_id: int):
+    """
+    Return a user record matching the supplied user ID,
+    or None when no user exists.
+    """
+
+    connection = get_database_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            full_name,
+            email,
+            password_hash,
+            role,
+            is_active,
+            created_at,
+            updated_at
+        FROM users
+        WHERE id = %s
+        LIMIT 1
+        """,
+        (user_id,),
+    )
+
+    user = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    return user
+
+
 def create_user(
     full_name: str,
     email: str,
@@ -75,6 +110,78 @@ def create_user(
     connection.close()
 
     return user_id
+
+
+def update_user_profile_details(
+    user_id: int,
+    full_name: str,
+    email: str,
+):
+    """
+    Update the editable personal profile fields
+    belonging to a user account.
+    """
+
+    connection = get_database_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        UPDATE users
+        SET
+            full_name = %s,
+            email = %s
+        WHERE id = %s
+        """,
+        (
+            full_name,
+            email,
+            user_id,
+        ),
+    )
+
+    connection.commit()
+
+    affected_rows = cursor.rowcount
+
+    cursor.close()
+    connection.close()
+
+    return affected_rows > 0
+
+
+def update_user_password(
+    user_id: int,
+    password_hash: str,
+):
+    """
+    Replace the stored password hash for a user account.
+    """
+
+    connection = get_database_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        UPDATE users
+        SET
+            password_hash = %s
+        WHERE id = %s
+        """,
+        (
+            password_hash,
+            user_id,
+        ),
+    )
+
+    connection.commit()
+
+    affected_rows = cursor.rowcount
+
+    cursor.close()
+    connection.close()
+
+    return affected_rows > 0
 
 
 def get_all_users():

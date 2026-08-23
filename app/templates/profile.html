@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        My Profile | Emotional Wellbeing Analysis System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+        <section class="analysis-card dashboard-card">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div
+                            class="message {{ category }}-message"
+                        >
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="user-bar">
+
+                <span>
+                    Signed in as
+                    <strong>
+                        {{ session.get("full_name") }}
+                    </strong>
+                </span>
+
+                <div class="user-actions">
+
+                    <a
+                        href="{{ url_for('index') }}"
+                        class="secondary-link-button"
+                    >
+                        Analyse Emotion
+                    </a>
+
+                    <a
+                        href="{{ url_for('dashboard.dashboard') }}"
+                        class="secondary-link-button"
+                    >
+                        Dashboard
+                    </a>
+
+                    <form
+                        method="post"
+                        action="{{ url_for('auth.logout') }}"
+                    >
+                        <button
+                            type="submit"
+                            class="logout-button"
+                        >
+                            Log out
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+
+            <div class="heading-group">
+
+                <p class="eyebrow">
+                    Account Management
+                </p>
+
+                <h1>
+                    My Profile
+                </h1>
+
+                <p class="intro-text">
+                    Review and update your account information.
+                    Your account role and status are managed
+                    separately and cannot be changed here.
+                </p>
+
+            </div>
+
+            <section class="result-card">
+
+                <p class="result-label">
+                    Personal information
+                </p>
+
+                <h2>
+                    Update Profile
+                </h2>
+
+                <form
+                    method="post"
+                    action="{{ url_for('auth.profile') }}"
+                >
+
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="update_profile"
+                    >
+
+                    <label for="full-name">
+                        Full name
+                    </label>
+
+                    <input
+                        id="full-name"
+                        name="full_name"
+                        type="text"
+                        maxlength="100"
+                        value="{{ user.full_name }}"
+                        required
+                    >
+
+                    <label for="email">
+                        Email address
+                    </label>
+
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        maxlength="255"
+                        value="{{ user.email }}"
+                        required
+                    >
+
+                    <div class="form-footer">
+
+                        <span>
+                            Account type:
+                            {{ user.role | title }}
+                        </span>
+
+                        <button type="submit">
+                            Save Profile
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+            <section class="result-card">
+
+                <p class="result-label">
+                    Account security
+                </p>
+
+                <h2>
+                    Change Password
+                </h2>
+
+                <p class="intro-text">
+                    Enter your current password before choosing
+                    a new password of at least 8 characters.
+                </p>
+
+                <form
+                    method="post"
+                    action="{{ url_for('auth.profile') }}"
+                >
+
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="change_password"
+                    >
+
+                    <label for="current-password">
+                        Current password
+                    </label>
+
+                    <input
+                        id="current-password"
+                        name="current_password"
+                        type="password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <label for="new-password">
+                        New password
+                    </label>
+
+                    <input
+                        id="new-password"
+                        name="new_password"
+                        type="password"
+                        minlength="8"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <label for="confirm-password">
+                        Confirm new password
+                    </label>
+
+                    <input
+                        id="confirm-password"
+                        name="confirm_password"
+                        type="password"
+                        minlength="8"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <div class="form-footer">
+
+                        <span>
+                            Password is stored securely as a hash.
+                        </span>
+
+                        <button type="submit">
+                            Change Password
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+            <div class="privacy-note">
+
+                <strong>
+                    Profile privacy
+                </strong>
+
+                <p>
+                    Only your personal account information can
+                    be edited from this page. Your system role
+                    and account status cannot be modified here.
+                </p>
+
+            </div>
+
+        </section>
+    </main>
+</body>
+</html>
