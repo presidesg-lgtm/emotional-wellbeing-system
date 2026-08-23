@@ -23,6 +23,7 @@
         <section class="analysis-card dashboard-card">
 
             <div class="user-bar">
+
                 <span>
                     Signed in as
                     <strong>
@@ -31,6 +32,7 @@
                 </span>
 
                 <div class="user-actions">
+
                     <a
                         href="{{ url_for('index') }}"
                         class="secondary-link-button"
@@ -56,6 +58,7 @@
                             Log out
                         </button>
                     </form>
+
                 </div>
             </div>
 
@@ -64,16 +67,19 @@
             %}
                 {% if messages %}
                     {% for category, message in messages %}
+
                         <div
                             class="message {{ category }}-message"
                         >
                             {{ message }}
                         </div>
+
                     {% endfor %}
                 {% endif %}
             {% endwith %}
 
             <div class="heading-group">
+
                 <p class="eyebrow">
                     Community Support
                 </p>
@@ -84,9 +90,11 @@
 
                 <p class="intro-text">
                     Share supportive messages and experiences
-                    with other registered users. Avoid sharing
-                    sensitive personal or medical information.
+                    anonymously with other registered users.
+                    Avoid sharing sensitive personal or medical
+                    information in your posts.
                 </p>
+
             </div>
 
             <section class="forum-compose-section">
@@ -94,6 +102,13 @@
                 <h2>
                     Create a Post
                 </h2>
+
+                <p class="intro-text">
+                    Your real name will not be shown to other
+                    community members. Administrators may access
+                    account information when necessary for
+                    moderation and safety.
+                </p>
 
                 <form method="post">
 
@@ -111,7 +126,7 @@
                     ></textarea>
 
                     <button type="submit">
-                        Publish Post
+                        Publish Post Anonymously
                     </button>
 
                 </form>
@@ -121,9 +136,11 @@
             <section class="forum-posts-section">
 
                 <div class="section-heading">
+
                     <h2>
                         Recent Posts
                     </h2>
+
                 </div>
 
                 {% if posts %}
@@ -137,13 +154,21 @@
                                 <div class="forum-post-heading">
 
                                     <div>
+
                                         <p class="result-label">
                                             Community Post #{{ post.id }}
                                         </p>
 
                                         <h3>
-                                            {{ post.author_name }}
+
+                                            {% if post.user_id == session.get("user_id") %}
+                                                You
+                                            {% else %}
+                                                Community Member
+                                            {% endif %}
+
                                         </h3>
+
                                     </div>
 
                                     <span class="forum-post-date">
@@ -177,7 +202,7 @@
                                 {% else %}
 
                                     <span class="current-account-label">
-                                        Your post
+                                        Your post — anonymous to other users
                                     </span>
 
                                 {% endif %}
@@ -191,9 +216,11 @@
                 {% else %}
 
                     <div class="empty-history">
+
                         <p>
                             No community posts have been created yet.
                         </p>
+
                     </div>
 
                 {% endif %}
@@ -201,15 +228,21 @@
             </section>
 
             <div class="admin-notice">
+
                 <strong>
-                    Community safety
+                    Community safety and anonymity
                 </strong>
 
                 <p>
-                    The forum is intended for peer support and general
-                    wellbeing discussion. It is not a clinical service
-                    or a replacement for professional support.
+                    Community posts are displayed anonymously to
+                    other users. Administrators may access account
+                    information where required for moderation and
+                    platform safety. The forum is intended for peer
+                    support and general wellbeing discussion and is
+                    not a clinical service or replacement for
+                    professional support.
                 </p>
+
             </div>
 
         </section>

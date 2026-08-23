@@ -38,8 +38,12 @@ def create_forum_post(
 
 def get_visible_forum_posts():
     """
-    Return forum posts that have not been hidden
-    by an administrator.
+    Return visible forum posts for the normal-user community view.
+
+    Real author names are deliberately excluded so that
+    forum participation remains anonymous to other users.
+    The user ID is retained only so the interface can identify
+    whether a post belongs to the currently signed-in user.
     """
 
     connection = get_database_connection()
@@ -52,8 +56,7 @@ def get_visible_forum_posts():
             fp.user_id,
             fp.content,
             fp.created_at,
-            fp.updated_at,
-            u.full_name AS author_name
+            fp.updated_at
         FROM forum_posts fp
         JOIN users u
             ON u.id = fp.user_id
