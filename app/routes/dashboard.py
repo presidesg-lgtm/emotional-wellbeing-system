@@ -10,6 +10,8 @@ from app.repositories.mood_repository import (
     get_emotion_distribution_by_user,
     get_mood_entries_by_user,
     get_mood_summary_by_user,
+    get_seven_day_mood_trend_by_user,
+    get_weekly_mood_summary_by_user,
 )
 
 
@@ -22,7 +24,8 @@ dashboard_blueprint = Blueprint(
 @dashboard_blueprint.get("/dashboard")
 def dashboard():
     """
-    Display a summary dashboard for the authenticated user.
+    Display emotional-analysis summaries and recent
+    time-based mood trends for the authenticated user.
     """
 
     if "user_id" not in session:
@@ -34,6 +37,18 @@ def dashboard():
 
     summary = get_mood_summary_by_user(
         user_id
+    )
+
+    weekly_summary = (
+        get_weekly_mood_summary_by_user(
+            user_id
+        )
+    )
+
+    seven_day_trend = (
+        get_seven_day_mood_trend_by_user(
+            user_id
+        )
     )
 
     emotion_distribution = (
@@ -50,6 +65,8 @@ def dashboard():
     return render_template(
         "dashboard.html",
         summary=summary,
+        weekly_summary=weekly_summary,
+        seven_day_trend=seven_day_trend,
         recent_entries=recent_entries,
         emotion_distribution=emotion_distribution,
     )

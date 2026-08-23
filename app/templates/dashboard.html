@@ -69,9 +69,10 @@
                 </h1>
 
                 <p class="intro-text">
-                    A summary of your recent emotion-analysis activity.
-                    These results describe patterns in emotional language
-                    and are not medical diagnoses.
+                    A summary of your recent emotion-analysis
+                    activity and time-based emotional patterns.
+                    These results describe patterns in emotional
+                    language and are not medical diagnoses.
                 </p>
             </div>
 
@@ -110,6 +111,167 @@
                         }}%
                     </h2>
                 </article>
+
+            </section>
+
+            <section class="weekly-summary-section">
+
+                <div class="section-heading">
+                    <h2>
+                        Weekly Emotional Summary
+                    </h2>
+
+                    <p>
+                        A reflective summary based on emotion
+                        analyses saved during the last 7 days.
+                    </p>
+                </div>
+
+                <div class="weekly-summary-card">
+
+                    <div class="weekly-summary-grid">
+
+                        <article class="weekly-summary-stat">
+                            <p class="summary-label">
+                                Analyses this week
+                            </p>
+
+                            <h3>
+                                {{ weekly_summary.total_analyses }}
+                            </h3>
+                        </article>
+
+                        <article class="weekly-summary-stat">
+                            <p class="summary-label">
+                                Most common this week
+                            </p>
+
+                            <h3>
+                                {{
+                                    weekly_summary.most_common_emotion
+                                }}
+                            </h3>
+                        </article>
+
+                        <article class="weekly-summary-stat">
+                            <p class="summary-label">
+                                Emotion categories
+                            </p>
+
+                            <h3>
+                                {{
+                                    weekly_summary.distinct_emotions
+                                }}
+                            </h3>
+                        </article>
+
+                        <article class="weekly-summary-stat">
+                            <p class="summary-label">
+                                Weekly avg. confidence
+                            </p>
+
+                            <h3>
+                                {{
+                                    "%.1f"|format(
+                                        weekly_summary.average_confidence
+                                        * 100
+                                    )
+                                }}%
+                            </h3>
+                        </article>
+
+                    </div>
+
+                    <p class="weekly-summary-text">
+                        {{ weekly_summary.summary_text }}
+                    </p>
+
+                </div>
+
+            </section>
+
+            <section class="mood-trend-section">
+
+                <div class="section-heading">
+                    <h2>
+                        7-Day Mood Trend
+                    </h2>
+
+                    <p>
+                        Daily analysis activity and the most
+                        frequently identified emotion for each day.
+                    </p>
+                </div>
+
+                <div class="mood-trend-grid">
+
+                    {% set maximum_daily_count =
+                        seven_day_trend
+                        | map(attribute='analysis_count')
+                        | max
+                    %}
+
+                    {% for day in seven_day_trend %}
+
+                        {% if maximum_daily_count > 0 %}
+                            {% set daily_height =
+                                (
+                                    day.analysis_count
+                                    / maximum_daily_count
+                                    * 100
+                                )
+                                | round(1)
+                            %}
+                        {% else %}
+                            {% set daily_height = 0 %}
+                        {% endif %}
+
+                        <article class="mood-trend-day">
+
+                            <div class="mood-trend-bar-area">
+
+                                <div
+                                    class="mood-trend-bar"
+                                    style="--trend-height: {{ daily_height }}%;"
+                                    aria-label="{{
+                                        day.analysis_count
+                                    }} analyses on {{
+                                        day.trend_date.strftime(
+                                            '%d %b %Y'
+                                        )
+                                    }}"
+                                ></div>
+
+                            </div>
+
+                            <strong class="mood-trend-count">
+                                {{ day.analysis_count }}
+                            </strong>
+
+                            <span class="mood-trend-emotion">
+                                {{ day.dominant_emotion }}
+                            </span>
+
+                            <span class="mood-trend-date">
+                                {{
+                                    day.trend_date.strftime(
+                                        "%d %b"
+                                    )
+                                }}
+                            </span>
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+                <p class="mood-trend-note">
+                    A day with no saved analysis is shown as
+                    “No analysis”. The trend describes recorded
+                    emotional language only and should not be
+                    interpreted as a diagnosis.
+                </p>
 
             </section>
 
