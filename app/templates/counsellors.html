@@ -59,7 +59,11 @@
                 </div>
             </div>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% with messages =
+                get_flashed_messages(
+                    with_categories=true
+                )
+            %}
                 {% if messages %}
                     {% for category, message in messages %}
                         <div
@@ -77,13 +81,27 @@
                 </p>
 
                 <h1>
-                    Available Counsellors
+                    Counsellor Recommendations
                 </h1>
 
                 <p class="intro-text">
-                    Browse counsellors who are currently
-                    available for appointment requests.
+                    Browse currently available counsellors.
+                    Recommendations use recent emotional-language
+                    patterns and counsellor specializations to help
+                    you explore suitable support options.
                 </p>
+            </div>
+
+            <div class="admin-notice">
+
+                <strong>
+                    How your recommendation was created
+                </strong>
+
+                <p>
+                    {{ recommendation.basis_text }}
+                </p>
+
             </div>
 
             {% if counsellors %}
@@ -97,7 +115,11 @@
                             <div class="counsellor-card-heading">
                                 <div>
                                     <p class="result-label">
-                                        Counsellor
+                                        {% if loop.first %}
+                                            Recommended first
+                                        {% else %}
+                                            Available counsellor
+                                        {% endif %}
                                     </p>
 
                                     <h2>
@@ -105,9 +127,25 @@
                                     </h2>
                                 </div>
 
-                                <span class="status-badge status-active">
-                                    Available
-                                </span>
+                                {% if loop.first %}
+                                    <span
+                                        class="
+                                            status-badge
+                                            status-active
+                                        "
+                                    >
+                                        Recommended
+                                    </span>
+                                {% else %}
+                                    <span
+                                        class="
+                                            status-badge
+                                            status-active
+                                        "
+                                    >
+                                        Available
+                                    </span>
+                                {% endif %}
                             </div>
 
                             <p class="counsellor-specialization">
@@ -133,6 +171,16 @@
                                 years
                             </p>
 
+                            <p class="counsellor-detail">
+                                <strong>
+                                    Why this option:
+                                </strong>
+
+                                {{
+                                    counsellor.recommendation_reason
+                                }}
+                            </p>
+
                             {% if counsellor.bio %}
                                 <p class="counsellor-bio">
                                     {{ counsellor.bio }}
@@ -149,7 +197,7 @@
                                     }}"
                                     class="primary-link-button"
                                 >
-                                    Book Appointment
+                                    View Times & Book
                                 </a>
                             </div>
 
@@ -172,6 +220,21 @@
                 </div>
 
             {% endif %}
+
+            <div class="privacy-note">
+
+                <strong>
+                    Recommendation note
+                </strong>
+
+                <p>
+                    This matching feature is assistive and
+                    non-diagnostic. You remain free to choose any
+                    available counsellor, and the recommendation
+                    does not replace professional assessment.
+                </p>
+
+            </div>
 
         </section>
     </main>

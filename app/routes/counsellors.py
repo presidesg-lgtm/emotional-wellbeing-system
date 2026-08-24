@@ -18,10 +18,22 @@ from app.repositories.counsellor_repository import (
     get_counsellor_profile_by_id,
 )
 
+from app.repositories.mood_repository import (
+    get_weekly_mood_summary_by_user,
+)
+
+from app.services.counsellor_recommendation_service import (
+    CounsellorRecommendationService,
+)
+
 
 counsellor_blueprint = Blueprint(
     "counsellors",
     __name__,
+)
+
+_recommendation_service = (
+    CounsellorRecommendationService()
 )
 
 
@@ -47,7 +59,8 @@ def user_access_required():
 @counsellor_blueprint.get("/counsellors")
 def counsellor_list():
     """
-    Display available counsellors to authenticated users.
+    Display available counsellors together with a transparent,
+    non-diagnostic recommendation based on recent mood patterns.
     """
 
     access_response = user_access_required()
@@ -57,9 +70,27 @@ def counsellor_list():
 
     counsellors = get_available_counsellors()
 
+    weekly_summary = (
+        get_weekly_mood_summary_by_user(
+            session["user_id"]
+        )
+    )
+
+    recommendation = (
+        _recommendation_service.recommend(
+            counsellors=counsellors,
+            weekly_summary=weekly_summary,
+        )
+    )
+
     return render_template(
         "counsellors.html",
-        counsellors=counsellors,
+        counsellors=(
+            recommendation[
+                "recommendations"
+            ]
+        ),
+        recommendation=recommendation,
     )
 
 
