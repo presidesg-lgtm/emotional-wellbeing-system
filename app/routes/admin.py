@@ -47,6 +47,18 @@ from app.repositories.forum_repository import (
     update_forum_report_status,
 )
 
+
+from app.repositories.model_update_repository import (
+    activate_model_update,
+    create_model_update_run,
+    get_model_update_runs,
+    set_model_update_status,
+)
+
+from app.services.model_update_service import (
+    ModelUpdateService,
+)
+
 from app.repositories.payment_repository import (
     get_all_payment_proofs,
     get_payment_proof_by_id,
@@ -63,6 +75,9 @@ from app.repositories.user_repository import (
     update_admin_managed_user,
     update_user_active_status,
 )
+
+
+_model_update_service = ModelUpdateService()
 
 
 admin_blueprint = Blueprint(
@@ -345,6 +360,317 @@ def download_analytics_report():
     )
 
     return response
+
+
+
+@admin_blueprint.get("/model-updates")
+def model_updates():
+    """
+    Display privacy-aware retraining preparation and
+    administrator model-update controls.
+    """
+
+    access_response = admin_access_required()
+
+    if access_response is not None:
+        return access_response
+
+    return render_template(
+        "admin_model_updates.html",
+        model_updates=get_model_update_runs(),
+        candidate_record_count=(
+            _model_update_service.count_candidate_rows()
+        ),
+    )
+
+
+@admin_blueprint.get("/model-updates/anonymized-data.csv")
+def download_retraining_dataset():
+    """
+    Download a privacy-reduced candidate dataset for
+    controlled offline review and retraining.
+    """
+
+    access_response = admin_access_required()
+
+    if access_response is not None:
+        return access_response
+
+    rows = (
+        _model_update_service
+        .build_anonymized_candidate_rows()
+    )
+
+    output = StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(
+        [
+            "anonymous_record_id",
+            "text",
+            "current_prediction",
+            "confidence",
+            "recorded_date",
+        ]
+    )
+
+    for row in rows:
+        writer.writerow(
+            [
+                row["anonymous_record_id"],
+                row["text"],
+                row["current_prediction"],
+                row["confidence"],
+                row["recorded_date"],
+            ]
+        )
+
+    response = Response(
+        output.getvalue(),
+        mimetype="text/csv",
+    )
+
+    response.headers[
+        "Content-Disposition"
+    ] = (
+        "attachment; "
+        "filename=anonymized-retraining-candidates.csv"
+    )
+
+    return response
+
+
+@admin_blueprint.post("/model-updates/register")
+def register_model_update():
+    """
+    Register a local retrained model candidate after validating
+    its saved-model directory.
+    """
+
+    access_response = admin_access_required()
+
+    if access_response is not None:
+        return access_response
+
+    version_label = request.form.get(
+        "version_label",
+        "",
+    ).strip()
+
+    model_directory = request.form.get(
+        "model_directory",
+        "",
+    ).strip()
+
+    notes = request.form.get(
+        "notes",
+        "",
+    ).strip()
+
+    source_record_text = request.form.get(
+        "source_record_count",
+        "0",
+    ).strip()
+
+    if not version_label or not model_directory:
+        flash(
+            "Version label and model directory are required.",
+            "error",
+        )
+        return redirect(
+            url_for("admin.model_updates")
+        )
+
+    if len(version_label) > 100:
+        flash(
+            "Version label must not exceed 100 characters.",
+            "error",
+        )
+        return redirect(
+            url_for("admin.model_updates")
+        )
+
+    if len(model_directory) > 255:
+        flash(
+            "Model directory must not exceed 255 characters.",
+            "error",
+        )
+        return redirect(
+            url_for("admin.model_updates")
+        )
+
+    if len(notes) > 500:
+        flash(
+            "Notes must not exceed 500 characters.",
+            "error",
+        )
+        return redirect(
+            url_for("admin.model_updates")
+        )
+
+    try:
+        source_record_count = int(
+            source_record_text
+        )
+    except ValueError:
+        source_record_count = -1
+
+    if source_record_count < 0:
+        flash(
+            "Source record count must be zero or greater.",
+            "error",
+        )
+        return redirect(
+            url_for("admin.model_updates")
+        )
+
+    valid, validation_message = (
+        _model_update_service
+        .validate_model_directory(
+            model_directory
+        )
+    )
+
+    if not valid:
+        flash(
+            validation_message,
+            "error",
+        )
+        return redirect(
+            url_for("admin.model_updates")
+        )
+
+    try:
+        run_id = create_model_update_run(
+            version_label=version_label,
+            model_directory=model_directory,
+            source_record_count=source_record_count,
+            notes=notes or None,
+            created_by_admin_id=session["user_id"],
+        )
+
+    except Exception:
+        flash(
+            "The model candidate could not be registered. "
+            "Check that the version label is unique.",
+            "error",
+        )
+        return redirect(
+            url_for("admin.model_updates")
+        )
+
+    flash(
+        "Candidate model registered successfully. "
+        f"Update record #{run_id}.",
+        "success",
+    )
+
+    return redirect(
+        url_for("admin.model_updates")
+    )
+
+
+@admin_blueprint.post(
+    "/model-updates/<int:run_id>/status"
+)
+def update_model_status(run_id: int):
+    """
+    Mark a registered candidate as evaluated or rejected.
+    """
+
+    access_response = admin_access_required()
+
+    if access_response is not None:
+        return access_response
+
+    status = request.form.get(
+        "status",
+        "",
+    ).strip()
+
+    updated = set_model_update_status(
+        run_id=run_id,
+        status=status,
+    )
+
+    flash(
+        "Model update status changed successfully."
+        if updated
+        else "Model update status could not be changed.",
+        "success" if updated else "error",
+    )
+
+    return redirect(
+        url_for("admin.model_updates")
+    )
+
+
+@admin_blueprint.post(
+    "/model-updates/<int:run_id>/activate"
+)
+def activate_model(run_id: int):
+    """
+    Activate an evaluated model for subsequent analyses.
+    """
+
+    access_response = admin_access_required()
+
+    if access_response is not None:
+        return access_response
+
+    updates = get_model_update_runs()
+
+    candidate = next(
+        (
+            update
+            for update in updates
+            if update["id"] == run_id
+        ),
+        None,
+    )
+
+    if candidate is None:
+        flash(
+            "The model-update record could not be found.",
+            "error",
+        )
+        return redirect(
+            url_for("admin.model_updates")
+        )
+
+    valid, validation_message = (
+        _model_update_service
+        .validate_model_directory(
+            candidate["model_directory"]
+        )
+    )
+
+    if not valid:
+        flash(
+            validation_message,
+            "error",
+        )
+        return redirect(
+            url_for("admin.model_updates")
+        )
+
+    activated = activate_model_update(
+        run_id
+    )
+
+    flash(
+        "Evaluated model activated successfully."
+        if activated
+        else (
+            "Only an evaluated candidate model can "
+            "be activated."
+        ),
+        "success" if activated else "error",
+    )
+
+    return redirect(
+        url_for("admin.model_updates")
+    )
 
 
 

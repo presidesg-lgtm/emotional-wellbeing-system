@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        AI Model Updates | Emotional Wellbeing Analysis System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+        <section class="analysis-card dashboard-card">
+
+            <div class="user-bar">
+                <span>
+                    Administrator:
+                    <strong>
+                        {{ session.get("full_name") }}
+                    </strong>
+                </span>
+
+                <div class="user-actions">
+                    <a
+                        href="{{ url_for('admin.dashboard') }}"
+                        class="secondary-link-button"
+                    >
+                        Main Admin Dashboard
+                    </a>
+
+                    <a
+                        href="{{ url_for('admin.analytics') }}"
+                        class="secondary-link-button"
+                    >
+                        Analytics & Reports
+                    </a>
+
+                    <form
+                        method="post"
+                        action="{{ url_for('auth.logout') }}"
+                    >
+                        <button
+                            type="submit"
+                            class="logout-button"
+                        >
+                            Log out
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% with messages =
+                get_flashed_messages(
+                    with_categories=true
+                )
+            %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div
+                            class="message {{ category }}-message"
+                        >
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="heading-group">
+                <p class="eyebrow">
+                    System Configuration
+                </p>
+
+                <h1>
+                    AI Model Updates
+                </h1>
+
+                <p class="intro-text">
+                    Prepare privacy-reduced user data for offline
+                    retraining, register evaluated model candidates,
+                    and control which validated local model is active.
+                </p>
+            </div>
+
+            <section class="admin-users-section">
+
+                <div class="section-heading">
+                    <h2>
+                        Anonymized Retraining Preparation
+                    </h2>
+
+                    <p>
+                        Candidate records exclude account identifiers.
+                        Common emails, phone numbers, URLs, and social
+                        handles inside free text are masked before
+                        export.
+                    </p>
+                </div>
+
+                <div class="result-card">
+
+                    <p class="result-label">
+                        Candidate records currently available
+                    </p>
+
+                    <h2>
+                        {{ candidate_record_count }}
+                    </h2>
+
+                    <a
+                        href="{{
+                            url_for(
+                                'admin.download_retraining_dataset'
+                            )
+                        }}"
+                        class="primary-link-button"
+                    >
+                        Download Anonymized Candidate CSV
+                    </a>
+
+                    <p class="disclaimer">
+                        This export is intended for controlled offline
+                        review and retraining. Current model predictions
+                        are included as reference information and should
+                        not automatically be treated as verified labels.
+                    </p>
+
+                </div>
+
+            </section>
+
+            <section class="admin-users-section">
+
+                <div class="section-heading">
+                    <h2>
+                        Register Retrained Model
+                    </h2>
+
+                    <p>
+                        After offline training and evaluation, place the
+                        candidate under ml/saved_models and register its
+                        directory here. Registration does not deploy it.
+                    </p>
+                </div>
+
+                <div class="result-card">
+
+                    <form
+                        method="post"
+                        action="{{
+                            url_for(
+                                'admin.register_model_update'
+                            )
+                        }}"
+                    >
+
+                        <label for="version_label">
+                            Version label
+                        </label>
+
+                        <input
+                            id="version_label"
+                            name="version_label"
+                            type="text"
+                            maxlength="100"
+                            required
+                            placeholder="Example: DistilBERT update 2026-08"
+                        >
+
+                        <label for="model_directory">
+                            Model directory
+                        </label>
+
+                        <input
+                            id="model_directory"
+                            name="model_directory"
+                            type="text"
+                            maxlength="255"
+                            required
+                            placeholder="Example: distilbert-emotion-2026-08"
+                        >
+
+                        <label for="source_record_count">
+                            Source record count
+                        </label>
+
+                        <input
+                            id="source_record_count"
+                            name="source_record_count"
+                            type="number"
+                            min="0"
+                            value="{{ candidate_record_count }}"
+                            required
+                        >
+
+                        <label for="notes">
+                            Evaluation / update notes
+                        </label>
+
+                        <textarea
+                            id="notes"
+                            name="notes"
+                            rows="4"
+                            maxlength="500"
+                            placeholder="Record evaluation evidence or update notes."
+                        ></textarea>
+
+                        <button type="submit">
+                            Register Candidate Model
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+            <section class="admin-users-section">
+
+                <div class="section-heading">
+                    <h2>
+                        Model Update Registry
+                    </h2>
+
+                    <p>
+                        Only an evaluated model can be activated.
+                        Activating a model changes the local model
+                        used for subsequent emotion analyses.
+                    </p>
+                </div>
+
+                {% if model_updates %}
+
+                    <div class="admin-table-wrapper">
+
+                        <table class="admin-user-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Version</th>
+                                    <th>Directory</th>
+                                    <th>Records</th>
+                                    <th>Status</th>
+                                    <th>Active</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                {% for update in model_updates %}
+
+                                    <tr>
+
+                                        <td>
+                                            <strong>
+                                                {{ update.version_label }}
+                                            </strong>
+
+                                            {% if update.notes %}
+                                                <br>
+                                                <small>
+                                                    {{ update.notes }}
+                                                </small>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            {{ update.model_directory }}
+                                        </td>
+
+                                        <td>
+                                            {{ update.source_record_count }}
+                                        </td>
+
+                                        <td>
+                                            {{ update.status | title }}
+                                        </td>
+
+                                        <td>
+                                            {% if update.is_active %}
+                                                <span
+                                                    class="
+                                                        status-badge
+                                                        status-active
+                                                    "
+                                                >
+                                                    Active
+                                                </span>
+                                            {% else %}
+                                                No
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            {{
+                                                update.created_at.strftime(
+                                                    "%d %b %Y"
+                                                )
+                                            }}
+                                        </td>
+
+                                        <td>
+
+                                            {% if update.status == "registered" %}
+
+                                                <form
+                                                    method="post"
+                                                    action="{{
+                                                        url_for(
+                                                            'admin.update_model_status',
+                                                            run_id=update.id
+                                                        )
+                                                    }}"
+                                                >
+                                                    <button
+                                                        type="submit"
+                                                        name="status"
+                                                        value="evaluated"
+                                                        class="account-action-button activate-button"
+                                                    >
+                                                        Mark Evaluated
+                                                    </button>
+
+                                                    <button
+                                                        type="submit"
+                                                        name="status"
+                                                        value="rejected"
+                                                        class="account-action-button deactivate-button"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </form>
+
+                                            {% elif update.status == "evaluated" %}
+
+                                                <form
+                                                    method="post"
+                                                    action="{{
+                                                        url_for(
+                                                            'admin.activate_model',
+                                                            run_id=update.id
+                                                        )
+                                                    }}"
+                                                >
+                                                    <button
+                                                        type="submit"
+                                                        class="account-action-button activate-button"
+                                                    >
+                                                        Activate Model
+                                                    </button>
+                                                </form>
+
+                                            {% elif update.is_active %}
+
+                                                <span
+                                                    class="current-account-label"
+                                                >
+                                                    Currently deployed
+                                                </span>
+
+                                            {% else %}
+
+                                                <span
+                                                    class="current-account-label"
+                                                >
+                                                    No action
+                                                </span>
+
+                                            {% endif %}
+
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-history">
+                        <p>
+                            No model-update records are available.
+                        </p>
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+            <div class="privacy-note">
+
+                <strong>
+                    Controlled update workflow
+                </strong>
+
+                <p>
+                    Transformer retraining is intentionally performed
+                    outside the web request process. The administrator
+                    prepares privacy-reduced candidate data, evaluates
+                    the resulting model, registers the local model
+                    directory, and explicitly activates only an
+                    evaluated model. This avoids automatically replacing
+                    the validated model with unreviewed user data.
+                </p>
+
+            </div>
+
+        </section>
+    </main>
+</body>
+</html>
