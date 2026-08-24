@@ -343,3 +343,145 @@ def update_forum_report_status(
     connection.close()
 
     return updated
+
+def create_forum_reply(
+    post_id: int,
+    user_id: int,
+    content: str,
+):
+    """
+    Create an anonymous community reply to a visible forum post.
+    """
+
+    connection = get_database_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        connection.start_transaction()
+
+        cursor.execute(
+            """
+            SELECT
+                fp.id
+            FROM forum_posts fp
+            JOIN users author
+                ON author.id = fp.user_id
+            WHERE
+                fp.id = %s
+                AND fp.is_hidden = FALSE
+                AND author.is_active = TRUE
+            LIMIT 1
+            FOR UPDATE
+            """,
+            (post_id,),
+        )
+
+        post = cursor.fetchone()
+
+        if post is None:
+            connection.rollback()
+            return None
+
+        cursor.execute(
+            """
+            INSERT INTO forum_replies (
+                post_id,
+                user_id,
+                content
+            )
+            VALUES (%s, %s, %s)
+            """,
+            (
+                post_id,
+                user_id,
+                content,
+            ),
+        )
+
+        reply_id = cursor.lastrowid
+
+        connection.commit()
+
+        return reply_id
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        connection.close()
+
+
+def get_visible_forum_replies():
+    """
+    Return replies belonging to visible forum posts.
+
+    Real author names are excluded. The user ID is returned only so
+    the interface can label the signed-in user's own reply as "You".
+    """
+
+    connection = get_database_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT
+            fr.id,
+            fr.post_id,
+            fr.user_id,
+            fr.content,
+            fr.created_at,
+            fr.updated_at
+        FROM forum_replies fr
+        JOIN forum_posts fp
+            ON fp.id = fr.post_id
+        JOIN users reply_author
+            ON reply_author.id = fr.user_id
+        JOIN users post_author
+            ON post_author.id = fp.user_id
+        WHERE
+            fp.is_hidden = FALSE
+            AND reply_author.is_active = TRUE
+            AND post_author.is_active = TRUE
+        ORDER BY
+            fr.created_at ASC,
+            fr.id ASC
+        """
+    )
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return rows
+
+
+def get_visible_forum_posts_with_replies():
+    """
+    Return visible anonymous forum posts with anonymous discussion
+    replies grouped beneath each post.
+    """
+
+    posts = get_visible_forum_posts()
+    replies = get_visible_forum_replies()
+
+    replies_by_post = {}
+
+    for reply in replies:
+        replies_by_post.setdefault(
+            reply["post_id"],
+            [],
+        ).append(reply)
+
+    for post in posts:
+        post["replies"] = replies_by_post.get(
+            post["id"],
+            [],
+        )
+        post["reply_count"] = len(
+            post["replies"]
+        )
+
+    return posts

@@ -8,13 +8,14 @@ from flask import (
     url_for,
 )
 
-from mysql.connector import IntegrityError
+from mysql.connector.errors import IntegrityError
 
 from app.repositories.forum_repository import (
     create_forum_post,
+    create_forum_reply,
     create_forum_report,
     get_forum_post_by_id,
-    get_visible_forum_posts,
+    get_visible_forum_posts_with_replies,
     has_user_reported_post,
 )
 
@@ -27,16 +28,25 @@ forum_blueprint = Blueprint(
 
 def normal_user_access_required():
     """
-    Ensure the current session belongs
-    to an authenticated normal user.
+    Ensure the current session belongs to an authenticated normal user.
     """
 
     if "user_id" not in session:
+        flash(
+            "Please log in to continue.",
+            "error",
+        )
+
         return redirect(
             url_for("auth.login")
         )
 
     if session.get("role") != "user":
+        flash(
+            "The community forum is available to normal user accounts.",
+            "error",
+        )
+
         return redirect(
             url_for("index")
         )
@@ -50,8 +60,8 @@ def normal_user_access_required():
 )
 def forum_home():
     """
-    Display visible community posts and allow
-    normal users to submit a new forum post.
+    Display the anonymous community forum and allow normal users
+    to publish new discussion posts.
     """
 
     access_response = normal_user_access_required()
@@ -67,7 +77,7 @@ def forum_home():
 
         if not content:
             flash(
-                "Forum post cannot be empty.",
+                "Please enter a message before publishing.",
                 "error",
             )
 
@@ -100,11 +110,80 @@ def forum_home():
             url_for("forum.forum_home")
         )
 
-    posts = get_visible_forum_posts()
+    posts = get_visible_forum_posts_with_replies()
 
     return render_template(
         "forum.html",
         posts=posts,
+    )
+
+
+@forum_blueprint.post(
+    "/forum/<int:post_id>/replies"
+)
+def create_reply(post_id: int):
+    """
+    Allow a normal user to participate in a forum discussion by
+    replying anonymously to a visible post.
+    """
+
+    access_response = normal_user_access_required()
+
+    if access_response is not None:
+        return access_response
+
+    content = request.form.get(
+        "reply_content",
+        "",
+    ).strip()
+
+    if not content:
+        flash(
+            "Please enter a reply before posting.",
+            "error",
+        )
+
+        return redirect(
+            url_for("forum.forum_home")
+            + f"#post-{post_id}"
+        )
+
+    if len(content) > 1000:
+        flash(
+            "Forum replies must not exceed 1000 characters.",
+            "error",
+        )
+
+        return redirect(
+            url_for("forum.forum_home")
+            + f"#post-{post_id}"
+        )
+
+    reply_id = create_forum_reply(
+        post_id=post_id,
+        user_id=session["user_id"],
+        content=content,
+    )
+
+    if reply_id is None:
+        flash(
+            "That discussion is no longer available.",
+            "error",
+        )
+
+        return redirect(
+            url_for("forum.forum_home")
+        )
+
+    flash(
+        "Reply posted anonymously. "
+        f"Reply #{reply_id}.",
+        "success",
+    )
+
+    return redirect(
+        url_for("forum.forum_home")
+        + f"#post-{post_id}"
     )
 
 

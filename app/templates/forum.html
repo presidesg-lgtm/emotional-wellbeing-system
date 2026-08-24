@@ -89,10 +89,10 @@
                 </h1>
 
                 <p class="intro-text">
-                    Share supportive messages and experiences
-                    anonymously with other registered users.
-                    Avoid sharing sensitive personal or medical
-                    information in your posts.
+                    Share supportive messages, experiences, and
+                    discussion replies anonymously with other
+                    registered users. Avoid sharing sensitive
+                    personal or medical information.
                 </p>
 
             </div>
@@ -138,8 +138,13 @@
                 <div class="section-heading">
 
                     <h2>
-                        Recent Posts
+                        Community Discussions
                     </h2>
+
+                    <p>
+                        Reply to a post to take part in an anonymous
+                        peer-support discussion.
+                    </p>
 
                 </div>
 
@@ -149,7 +154,10 @@
 
                         {% for post in posts %}
 
-                            <article class="forum-post-card">
+                            <article
+                                class="forum-post-card"
+                                id="post-{{ post.id }}"
+                            >
 
                                 <div class="forum-post-heading">
 
@@ -207,6 +215,99 @@
 
                                 {% endif %}
 
+                                <div class="forum-report-preview">
+
+                                    <strong>
+                                        Discussion
+                                        ({{ post.reply_count }})
+                                    </strong>
+
+                                    {% if post.replies %}
+
+                                        <div class="history-list">
+
+                                            {% for reply in post.replies %}
+
+                                                <article class="history-entry">
+
+                                                    <div class="history-entry-heading">
+
+                                                        <div>
+                                                            <p class="result-label">
+                                                                Reply #{{ reply.id }}
+                                                            </p>
+
+                                                            <h2>
+                                                                {% if reply.user_id == session.get("user_id") %}
+                                                                    You
+                                                                {% else %}
+                                                                    Community Member
+                                                                {% endif %}
+                                                            </h2>
+                                                        </div>
+
+                                                        <div class="history-meta">
+                                                            {{
+                                                                reply.created_at.strftime(
+                                                                    "%d %b %Y, %H:%M"
+                                                                )
+                                                            }}
+                                                        </div>
+
+                                                    </div>
+
+                                                    <p class="history-text">
+                                                        {{ reply.content }}
+                                                    </p>
+
+                                                </article>
+
+                                            {% endfor %}
+
+                                        </div>
+
+                                    {% else %}
+
+                                        <p>
+                                            No replies yet. You can start
+                                            the discussion below.
+                                        </p>
+
+                                    {% endif %}
+
+                                    <form
+                                        method="post"
+                                        action="{{
+                                            url_for(
+                                                'forum.create_reply',
+                                                post_id=post.id
+                                            )
+                                        }}"
+                                    >
+
+                                        <label
+                                            for="reply-content-{{ post.id }}"
+                                        >
+                                            Add an anonymous reply
+                                        </label>
+
+                                        <textarea
+                                            id="reply-content-{{ post.id }}"
+                                            name="reply_content"
+                                            rows="3"
+                                            maxlength="1000"
+                                            placeholder="Write a supportive reply..."
+                                            required
+                                        ></textarea>
+
+                                        <button type="submit">
+                                            Post Reply Anonymously
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
                             </article>
 
                         {% endfor %}
@@ -234,13 +335,15 @@
                 </strong>
 
                 <p>
-                    Community posts are displayed anonymously to
-                    other users. Administrators may access account
-                    information where required for moderation and
-                    platform safety. The forum is intended for peer
-                    support and general wellbeing discussion and is
-                    not a clinical service or replacement for
-                    professional support.
+                    Community posts and replies are displayed
+                    anonymously to other users. Administrators may
+                    access account information where required for
+                    moderation and platform safety. If a parent post
+                    is hidden during moderation, its discussion thread
+                    is also removed from the community view. The forum
+                    is intended for peer support and general wellbeing
+                    discussion and is not a clinical service or
+                    replacement for professional support.
                 </p>
 
             </div>
