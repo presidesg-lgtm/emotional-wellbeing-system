@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, session
 
 from app.repositories.mood_repository import create_mood_entry
 from app.services.emotion_analysis_service import EmotionAnalysisService
+from app.services.risk_support_service import RiskSupportService
 
 
 analysis_blueprint = Blueprint(
@@ -10,6 +11,7 @@ analysis_blueprint = Blueprint(
 )
 
 _emotion_service = None
+_risk_support_service = RiskSupportService()
 
 
 def get_emotion_service():
@@ -31,8 +33,11 @@ def get_emotion_service():
 @analysis_blueprint.post("/api/analyse")
 def analyse_text():
     """
-    Analyse user-submitted text, return the prediction,
-    and store the result for the authenticated user.
+    Analyse user-submitted text, return the prediction and
+    risk-aware supportive guidance, then store the mood result.
+
+    The support layer is non-diagnostic and is not stored as a
+    clinical risk label.
     """
 
     if "user_id" not in session:
@@ -55,6 +60,10 @@ def analyse_text():
 
         result = emotion_service.analyse_text(text)
 
+        risk_support = (
+            _risk_support_service.assess_text(text)
+        )
+
         mood_entry_id = create_mood_entry(
             user_id=session["user_id"],
             submitted_text=text.strip(),
@@ -68,6 +77,7 @@ def analyse_text():
                 "mood_entry_id": mood_entry_id,
                 "emotion": result["emotion"],
                 "confidence": result["confidence"],
+                "risk_support": risk_support,
                 "disclaimer": (
                     "This result reflects patterns of emotional language "
                     "and is not a medical or psychological diagnosis."

@@ -22,8 +22,23 @@ const confidenceResult =
 const confidenceBar =
     document.getElementById("confidence-bar");
 
+const supportiveMessage =
+    document.getElementById("supportive-message");
+
+const supportiveHeading =
+    document.getElementById("supportive-heading");
+
 const supportiveFeedback =
     document.getElementById("supportive-feedback");
+
+const riskNotice =
+    document.getElementById("risk-notice");
+
+const riskNoticeTitle =
+    document.getElementById("risk-notice-title");
+
+const riskNoticeText =
+    document.getElementById("risk-notice-text");
 
 const disclaimerResult =
     document.getElementById("disclaimer-result");
@@ -65,6 +80,65 @@ const supportiveMessages = {
 };
 
 
+function resetRiskNotice() {
+    riskNotice.classList.add("hidden");
+    riskNotice.classList.remove(
+        "risk-notice-elevated",
+        "risk-notice-immediate"
+    );
+
+    riskNoticeTitle.textContent = "";
+    riskNoticeText.textContent = "";
+}
+
+
+function displayRiskAwareSupport(
+    riskSupport
+) {
+    resetRiskNotice();
+
+    if (
+        !riskSupport
+        || riskSupport.level === "standard"
+    ) {
+        supportiveMessage.classList.remove(
+            "support-message-muted"
+        );
+
+        supportiveHeading.textContent =
+            "Supportive reflection";
+
+        return;
+    }
+
+    supportiveMessage.classList.add(
+        "support-message-muted"
+    );
+
+    supportiveHeading.textContent =
+        "Emotional reflection";
+
+    riskNotice.classList.remove("hidden");
+
+    if (riskSupport.level === "immediate") {
+        riskNotice.classList.add(
+            "risk-notice-immediate"
+        );
+    }
+    else {
+        riskNotice.classList.add(
+            "risk-notice-elevated"
+        );
+    }
+
+    riskNoticeTitle.textContent =
+        riskSupport.title;
+
+    riskNoticeText.textContent =
+        riskSupport.message;
+}
+
+
 emotionText.addEventListener(
     "input",
     () => {
@@ -84,6 +158,8 @@ analysisForm.addEventListener(
 
         resultCard.classList.add("hidden");
         errorMessage.classList.add("hidden");
+
+        resetRiskNotice();
 
         if (!text) {
             errorMessage.textContent =
@@ -147,6 +223,10 @@ analysisForm.addEventListener(
                     "Take a moment to reflect "
                     + "on what you are feeling."
                 );
+
+            displayRiskAwareSupport(
+                data.risk_support
+            );
 
             disclaimerResult.textContent =
                 data.disclaimer;

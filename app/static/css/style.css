@@ -1925,3 +1925,55 @@ button:disabled {
             repeat(2, minmax(0, 1fr));
     }
 }
+
+/* Stage 14H: risk-aware supportive messaging */
+
+.support-message-muted {
+    margin-bottom: 16px;
+}
+
+.risk-notice {
+    margin-top: 16px;
+
+    padding: 18px;
+
+    border-radius: 14px;
+
+    border: 1px solid transparent;
+}
+
+.risk-notice h3 {
+    margin: 0 0 8px;
+
+    font-size: 1.05rem;
+}
+
+.risk-notice p {
+    margin: 0;
+
+    line-height: 1.7;
+}
+
+.risk-notice-elevated {
+    background: #fff8e8;
+
+    border-color: #ecd8a6;
+
+    color: #6d5422;
+}
+
+.risk-notice-elevated h3 {
+    color: #6d5422;
+}
+
+.risk-notice-immediate {
+    background: #fff1f1;
+
+    border-color: #efcaca;
+
+    color: #7a3030;
+}
+
+.risk-notice-immediate h3 {
+    color: #7a3030;
+}
