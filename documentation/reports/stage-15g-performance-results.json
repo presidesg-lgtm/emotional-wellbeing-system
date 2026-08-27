@@ -1,0 +1,78 @@
+{
+  "generated_at": "2026-08-28T02:34:28+05:30",
+  "flask": {
+    "create_app_ms": 16.85,
+    "routes": {
+      "/login": {
+        "count": 25,
+        "min_ms": 0.43,
+        "average_ms": 0.99,
+        "median_ms": 0.46,
+        "p95_ms": 0.76,
+        "max_ms": 12.82
+      },
+      "/this-page-does-not-exist": {
+        "count": 25,
+        "min_ms": 0.41,
+        "average_ms": 0.76,
+        "median_ms": 0.46,
+        "p95_ms": 0.63,
+        "max_ms": 7.36
+      }
+    }
+  },
+  "risk_support": {
+    "count": 3000,
+    "min_ms": 0.01,
+    "average_ms": 0.02,
+    "median_ms": 0.03,
+    "p95_ms": 0.03,
+    "max_ms": 1.04
+  },
+  "model": {
+    "device": "cuda",
+    "cuda_available": true,
+    "model_directory": "selected-distilbert-emotion",
+    "cold_service_and_model_load_ms": 4028.88,
+    "warm_inference": {
+      "count": 18,
+      "min_ms": 16.39,
+      "average_ms": 21.86,
+      "median_ms": 19.62,
+      "p95_ms": 24.67,
+      "max_ms": 58.11
+    },
+    "sample_predictions": [
+      {
+        "text": "I feel calm and hopeful today.",
+        "emotion": "Joy",
+        "confidence": 0.9995
+      },
+      {
+        "text": "I am frustrated because the day has been difficult.",
+        "emotion": "Anger",
+        "confidence": 0.9989
+      },
+      {
+        "text": "I feel sad and lonely this evening.",
+        "emotion": "Sadness",
+        "confidence": 0.9995
+      },
+      {
+        "text": "I am surprised by how well things worked out.",
+        "emotion": "Surprise",
+        "confidence": 0.9933
+      },
+      {
+        "text": "I feel nervous about tomorrow but I am trying to manage.",
+        "emotion": "Fear",
+        "confidence": 0.9989
+      },
+      {
+        "text": "I really appreciate the people who supported me today.",
+        "emotion": "Joy",
+        "confidence": 0.7056
+      }
+    ]
+  }
+}

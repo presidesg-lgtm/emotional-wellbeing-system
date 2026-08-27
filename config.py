@@ -42,8 +42,8 @@ class Config:
     # Limit request bodies to protect file-upload endpoints.
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 
-# Debug mode is opt-in. Keep disabled for normal/demo/production runs.
-DEBUG = _environment_flag(
-    "FLASK_DEBUG",
-    default=False,
-)
+    # Debug mode is opt-in. Keep disabled for normal/demo/production runs.
+    DEBUG = _environment_flag(
+        "FLASK_DEBUG",
+        default=False,
+    )
