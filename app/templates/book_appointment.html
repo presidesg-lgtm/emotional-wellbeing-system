@@ -99,6 +99,7 @@
             {% if available_slots %}
 
                 <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <label for="availability_slot_id">
                         Available appointment time

@@ -46,6 +46,11 @@ const disclaimerResult =
 const errorMessage =
     document.getElementById("error-message");
 
+const csrfToken =
+    document.querySelector(
+        'input[name="csrf_token"]'
+    ).value;
+
 
 const supportiveMessages = {
     Sadness:
@@ -182,7 +187,9 @@ analysisForm.addEventListener(
 
                     headers: {
                         "Content-Type":
-                            "application/json"
+                            "application/json",
+                        "X-CSRF-Token":
+                            csrfToken
                     },
 
                     body: JSON.stringify({

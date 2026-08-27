@@ -51,6 +51,17 @@ def analyse_text():
             401,
         )
 
+    if session.get("role") != "user":
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": "This feature is available to normal user accounts.",
+                }
+            ),
+            403,
+        )
+
     request_data = request.get_json(silent=True) or {}
 
     text = request_data.get("text", "")

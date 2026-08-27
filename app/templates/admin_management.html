@@ -25,6 +25,7 @@
                     </a>
 
                     <form method="post" action="{{ url_for('auth.logout') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="logout-button">
                             Log out
                         </button>
@@ -59,6 +60,7 @@
                 </div>
 
                 <form method="post" action="{{ url_for('admin.create_normal_user') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label for="new-user-name">Full name</label>
                     <input id="new-user-name" name="full_name" type="text" required>
 
@@ -95,6 +97,7 @@
                             </div>
 
                             <form method="post" action="{{ url_for('admin.update_normal_user', user_id=user.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <label for="user-name-{{ user.id }}">Full name</label>
                                 <input id="user-name-{{ user.id }}" name="full_name" type="text" value="{{ user.full_name }}" required>
 
@@ -105,6 +108,7 @@
                             </form>
 
                             <form method="post" action="{{ url_for('admin.update_account_status', user_id=user.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 {% if user.is_active %}
                                     <button type="submit" name="action" value="deactivate" class="appointment-reject-button">Deactivate User</button>
                                 {% else %}
@@ -123,6 +127,7 @@
                 </div>
 
                 <form method="post" action="{{ url_for('admin.create_counsellor') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label for="new-counsellor-name">Full name</label>
                     <input id="new-counsellor-name" name="full_name" type="text" required>
 
@@ -176,6 +181,7 @@
                             </div>
 
                             <form method="post" action="{{ url_for('admin.update_counsellor', profile_id=counsellor.profile_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="counsellor_user_id" value="{{ counsellor.user_id }}">
 
                                 <label>Full name</label>
@@ -205,6 +211,7 @@
                             </form>
 
                             <form method="post" action="{{ url_for('admin.update_account_status', user_id=counsellor.user_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 {% if counsellor.is_active %}
                                     <button type="submit" name="action" value="deactivate" class="appointment-reject-button">Deactivate Counsellor</button>
                                 {% else %}
@@ -223,6 +230,7 @@
                 </div>
 
                 <form method="post" action="{{ url_for('admin.assign_counsellor') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label for="assignment-user">User</label>
                     <select id="assignment-user" name="user_id" required>
                         <option value="">Select an active user</option>
@@ -265,6 +273,7 @@
                             </div>
 
                             <form method="post" action="{{ url_for('admin.remove_assignment', user_id=assignment.user_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="appointment-cancel-button">Remove Assignment</button>
                             </form>
                         </article>

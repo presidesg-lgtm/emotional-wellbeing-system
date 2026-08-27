@@ -8,6 +8,12 @@ from flask import (
 
 from config import Config
 
+from app.security import (
+    enforce_active_authenticated_session,
+    get_csrf_token,
+    validate_csrf_request,
+)
+
 from app.routes.admin import admin_blueprint
 from app.routes.analysis import analysis_blueprint
 from app.routes.appointments import appointment_blueprint
@@ -30,6 +36,16 @@ def create_app() -> Flask:
     app = Flask(__name__)
 
     app.config.from_object(Config)
+
+    if not app.config.get("SECRET_KEY"):
+        raise RuntimeError(
+            "SECRET_KEY must be configured in the environment."
+        )
+
+    app.jinja_env.globals["csrf_token"] = get_csrf_token
+
+    app.before_request(validate_csrf_request)
+    app.before_request(enforce_active_authenticated_session)
 
     app.register_blueprint(
         analysis_blueprint
@@ -91,6 +107,12 @@ def create_app() -> Flask:
         if session.get("role") == "counsellor":
             return redirect(
                 url_for("counsellor_portal.dashboard")
+            )
+
+        if session.get("role") != "user":
+            session.clear()
+            return redirect(
+                url_for("auth.login")
             )
 
         return render_template(

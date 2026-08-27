@@ -139,6 +139,7 @@ def login():
         session["user_id"] = user["id"]
         session["full_name"] = user["full_name"]
         session["role"] = user["role"]
+        session.permanent = True
 
         if user["role"] == "admin":
             return redirect(

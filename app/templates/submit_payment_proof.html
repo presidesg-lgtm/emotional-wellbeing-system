@@ -110,6 +110,7 @@
                 method="post"
                 enctype="multipart/form-data"
             >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <label for="payment_proof">
                     Payment proof

@@ -33,6 +33,11 @@ def dashboard():
             url_for("auth.login")
         )
 
+    if session.get("role") != "user":
+        return redirect(
+            url_for("index")
+        )
+
     user_id = session["user_id"]
 
     summary = get_mood_summary_by_user(

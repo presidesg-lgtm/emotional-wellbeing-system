@@ -20,6 +20,11 @@ def mood_history():
             url_for("auth.login")
         )
 
+    if session.get("role") != "user":
+        return redirect(
+            url_for("index")
+        )
+
     mood_entries = get_mood_entries_by_user(
         session["user_id"]
     )

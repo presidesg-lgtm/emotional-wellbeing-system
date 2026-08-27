@@ -51,6 +51,7 @@
                         method="post"
                         action="{{ url_for('auth.logout') }}"
                     >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button
                             type="submit"
                             class="logout-button"
@@ -111,6 +112,7 @@
                 </p>
 
                 <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <label for="content">
                         Message
@@ -284,6 +286,7 @@
                                             )
                                         }}"
                                     >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                                         <label
                                             for="reply-content-{{ post.id }}"

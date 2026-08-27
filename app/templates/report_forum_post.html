@@ -78,6 +78,7 @@
             </div>
 
             <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <label for="reason">
                     Reason for report

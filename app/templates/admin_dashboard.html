@@ -56,6 +56,7 @@
                         method="post"
                         action="{{ url_for('auth.logout') }}"
                     >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button
                             type="submit"
                             class="logout-button"
@@ -260,6 +261,7 @@
                                                         )
                                                     }}"
                                                 >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <input
                                                         type="hidden"
                                                         name="action"
@@ -285,6 +287,7 @@
                                                         )
                                                     }}"
                                                 >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <input
                                                         type="hidden"
                                                         name="action"
@@ -424,6 +427,7 @@
                                         }}"
                                         class="payment-review-form"
                                     >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                                         <label
                                             for="admin-note-{{ payment.id }}"
@@ -624,6 +628,7 @@
                                         }}"
                                         class="forum-moderation-actions"
                                     >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                                         <input
                                             type="hidden"
@@ -731,6 +736,7 @@
                                         )
                                     }}"
                                 >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                                     {% if post.is_hidden %}
 
