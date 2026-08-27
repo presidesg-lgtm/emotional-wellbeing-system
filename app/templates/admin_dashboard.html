@@ -18,7 +18,8 @@
     >
 </head>
 
-<body>
+<body class="has-app-sidebar admin-dashboard-page">
+    {% include "_sidebar.html" %}
     <main class="page-shell">
         <section class="analysis-card dashboard-card">
 
@@ -320,7 +321,7 @@
 
             </section>
 
-            <section class="admin-payment-section">
+            <section id="payment-reviews" class="admin-payment-section">
 
                 <div class="section-heading">
                     <h2>
@@ -504,7 +505,7 @@
 
             </section>
 
-            <section class="admin-forum-section">
+            <section id="forum-moderation" class="admin-forum-section">
 
                 <div class="section-heading">
                     <h2>

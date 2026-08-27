@@ -108,6 +108,43 @@ class ReliabilityTests(unittest.TestCase):
             endpoint="auth.login",
             view_func=login,
         )
+
+        # The Stage 15H sidebar references the normal-user navigation
+        # endpoints. The miniature Flask app used by this isolated
+        # reliability test needs harmless stand-in routes so Jinja can
+        # build those links while rendering the real payment template.
+        app.add_url_rule(
+            "/dashboard-alias",
+            endpoint="dashboard.dashboard",
+            view_func=lambda: "dashboard",
+        )
+        app.add_url_rule(
+            "/history-alias",
+            endpoint="history.mood_history",
+            view_func=lambda: "history",
+        )
+        app.add_url_rule(
+            "/counsellors-alias",
+            endpoint="counsellors.counsellor_list",
+            view_func=lambda: "counsellors",
+        )
+        app.add_url_rule(
+            "/forum-alias",
+            endpoint="forum.forum_home",
+            view_func=lambda: "forum",
+        )
+        app.add_url_rule(
+            "/profile-alias",
+            endpoint="auth.profile",
+            view_func=lambda: "profile",
+        )
+        app.add_url_rule(
+            "/logout-alias",
+            endpoint="auth.logout",
+            view_func=lambda: "logout",
+            methods=["POST"],
+        )
+
         app.register_blueprint(payment_blueprint)
 
         get_appointment.return_value = {

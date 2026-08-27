@@ -18,7 +18,10 @@
     >
 </head>
 
-<body>
+<body class="{% if session.get('user_id') %}has-app-sidebar{% endif %}">
+    {% if session.get("user_id") %}
+        {% include "_sidebar.html" %}
+    {% endif %}
     <main class="page-shell">
         <section class="analysis-card auth-card">
 

@@ -19,7 +19,8 @@
     >
 </head>
 
-<body>
+<body class="has-app-sidebar counsellor-dashboard-page">
+    {% include "_sidebar.html" %}
     <main class="page-shell">
         <section class="analysis-card dashboard-card">
 
@@ -85,7 +86,7 @@
 
             </div>
 
-            <section class="forum-compose-section">
+            <section id="availability" class="forum-compose-section">
 
                 <div class="section-heading">
 
@@ -269,7 +270,7 @@
 
             </section>
 
-            <section class="recent-section">
+            <section id="appointment-requests" class="recent-section">
 
                 <div class="section-heading">
 

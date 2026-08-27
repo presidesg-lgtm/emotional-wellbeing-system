@@ -18,46 +18,53 @@
     >
 </head>
 
-<body>
-    <main class="page-shell">
-        <section class="analysis-card">
+<body class="has-app-sidebar">
+    {% include "_sidebar.html" %}
+    <main class="page-shell home-shell">
+        <section class="analysis-card home-card">
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    {% for category, message in messages %}
-                        <div
-                            class="message {{ category }}-message"
-                        >
-                            {{ message }}
-                        </div>
-                    {% endfor %}
+                    <div class="home-message-stack">
+                        {% for category, message in messages %}
+                            <div
+                                class="message {{ category }}-message"
+                            >
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
                 {% endif %}
             {% endwith %}
 
             {% if session.get("user_id") %}
-                <div class="user-bar">
+                <header class="user-bar home-user-bar">
+                    <div class="account-chip">
+                        <span class="account-chip-label">
+                            Signed in
+                        </span>
 
-                    <span>
-                        Signed in as
                         <strong>
                             {{ session.get("full_name") }}
                         </strong>
-                    </span>
+                    </div>
 
-                    <div class="user-actions">
-
+                    <nav
+                        class="user-actions"
+                        aria-label="Account navigation"
+                    >
                         <a
                             href="{{ url_for('auth.profile') }}"
                             class="secondary-link-button"
                         >
-                            My Profile
+                            Profile
                         </a>
 
                         <a
                             href="{{ url_for('history.mood_history') }}"
                             class="secondary-link-button"
                         >
-                            Mood History
+                            History
                         </a>
 
                         <a
@@ -71,14 +78,14 @@
                             href="{{ url_for('appointments.my_appointments') }}"
                             class="secondary-link-button"
                         >
-                            My Appointments
+                            Appointments
                         </a>
 
                         <a
                             href="{{ url_for('forum.forum_home') }}"
                             class="secondary-link-button"
                         >
-                            Community Forum
+                            Forum
                         </a>
 
                         {% if session.get("role") == "user" %}
@@ -94,7 +101,12 @@
                             method="post"
                             action="{{ url_for('auth.logout') }}"
                         >
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
+
                             <button
                                 type="submit"
                                 class="logout-button"
@@ -102,128 +114,260 @@
                                 Log out
                             </button>
                         </form>
-
-                    </div>
-                </div>
+                    </nav>
+                </header>
             {% endif %}
 
-            <div class="heading-group">
-                <p class="eyebrow">
-                    Emotional Wellbeing Support
-                </p>
+            <section class="home-hero">
+                <div class="home-hero-copy">
+                    <p class="eyebrow">
+                        Emotional Wellbeing Support
+                    </p>
 
-                <h1>
-                    How are you feeling today?
-                </h1>
+                    <h1>
+                        Understand the emotion expressed
+                        in your words.
+                    </h1>
 
-                <p class="intro-text">
-                    Write a short description of how you are feeling.
-                    The system will estimate the emotional tone expressed
-                    in your text.
-                </p>
-            </div>
+                    <p class="intro-text home-intro">
+                        Record how you are feeling, receive an
+                        AI-assisted estimate of the emotional tone,
+                        and use your personal history and support
+                        features to reflect on patterns over time.
+                    </p>
 
-            <form id="analysis-form">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                <label for="emotion-text">
-                    Describe how you feel
-                </label>
-
-                <textarea
-                    id="emotion-text"
-                    name="text"
-                    rows="7"
-                    maxlength="1000"
-                    placeholder="For example: I have been feeling nervous and overwhelmed about tomorrow..."
-                    required
-                ></textarea>
-
-                <div class="form-footer">
-
-                    <span id="character-count">
-                        0 / 1000
-                    </span>
-
-                    <button
-                        id="analyse-button"
-                        type="submit"
-                    >
-                        Analyse Emotion
-                    </button>
-
-                </div>
-
-            </form>
-
-            <div
-                id="error-message"
-                class="message error-message hidden"
-                role="alert"
-            ></div>
-
-            <section
-                id="result-card"
-                class="result-card hidden"
-                aria-live="polite"
-            >
-
-                <p class="result-label">
-                    Estimated emotional expression
-                </p>
-
-                <h2 id="emotion-result">
-                    -
-                </h2>
-
-                <div class="confidence-section">
-
-                    <div class="confidence-heading">
+                    <div class="home-trust-row">
                         <span>
-                            Model confidence
+                            Private account access
                         </span>
 
-                        <strong id="confidence-result">
-                            0%
-                        </strong>
+                        <span>
+                            Six emotion categories
+                        </span>
+
+                        <span>
+                            Support, not diagnosis
+                        </span>
+                    </div>
+                </div>
+
+                <aside class="home-journey-card">
+                    <p class="home-card-kicker">
+                        Your wellbeing journey
+                    </p>
+
+                    <div class="journey-step">
+                        <span class="journey-number">1</span>
+
+                        <div>
+                            <strong>Express</strong>
+                            <p>
+                                Describe how you feel in your own words.
+                            </p>
+                        </div>
                     </div>
 
-                    <div class="confidence-track">
-                        <div
-                            id="confidence-bar"
-                            class="confidence-bar"
-                        ></div>
+                    <div class="journey-step">
+                        <span class="journey-number">2</span>
+
+                        <div>
+                            <strong>Reflect</strong>
+                            <p>
+                                Review the estimated emotion and confidence.
+                            </p>
+                        </div>
                     </div>
 
-                </div>
+                    <div class="journey-step">
+                        <span class="journey-number">3</span>
 
-                <div
-                    id="supportive-message"
-                    class="support-message"
-                >
-                    <h3 id="supportive-heading">
-                        Supportive reflection
-                    </h3>
-
-                    <p id="supportive-feedback"></p>
-                </div>
-
-                <div
-                    id="risk-notice"
-                    class="risk-notice hidden"
-                    role="alert"
-                >
-                    <h3 id="risk-notice-title"></h3>
-
-                    <p id="risk-notice-text"></p>
-                </div>
-
-                <p
-                    id="disclaimer-result"
-                    class="disclaimer"
-                ></p>
-
+                        <div>
+                            <strong>Track & support</strong>
+                            <p>
+                                Follow trends and access community or
+                                professional support features.
+                            </p>
+                        </div>
+                    </div>
+                </aside>
             </section>
+
+            {% if session.get("user_id") %}
+                <section
+                    class="home-feature-grid"
+                    aria-label="Wellbeing features"
+                >
+                    <a
+                        href="{{ url_for('dashboard.dashboard') }}"
+                        class="home-feature-card"
+                    >
+                        <span class="feature-icon">01</span>
+                        <strong>Personal Dashboard</strong>
+                        <small>
+                            Review summaries and recent emotional patterns.
+                        </small>
+                    </a>
+
+                    <a
+                        href="{{ url_for('history.mood_history') }}"
+                        class="home-feature-card"
+                    >
+                        <span class="feature-icon">02</span>
+                        <strong>Mood History</strong>
+                        <small>
+                            Look back at your previous text analyses.
+                        </small>
+                    </a>
+
+                    <a
+                        href="{{ url_for('counsellors.counsellor_list') }}"
+                        class="home-feature-card"
+                    >
+                        <span class="feature-icon">03</span>
+                        <strong>Professional Support</strong>
+                        <small>
+                            Browse counsellors and appointment options.
+                        </small>
+                    </a>
+
+                    <a
+                        href="{{ url_for('forum.forum_home') }}"
+                        class="home-feature-card"
+                    >
+                        <span class="feature-icon">04</span>
+                        <strong>Community Forum</strong>
+                        <small>
+                            Take part in anonymous supportive discussions.
+                        </small>
+                    </a>
+                </section>
+            {% endif %}
+
+            <section class="analyser-panel">
+                <div class="heading-group analyser-heading">
+                    <div>
+                        <p class="eyebrow">
+                            Emotion Analysis
+                        </p>
+
+                        <h2>
+                            How are you feeling today?
+                        </h2>
+                    </div>
+
+                    <p class="intro-text">
+                        Write a short description of how you are feeling.
+                        The system estimates the emotional expression
+                        contained in the text.
+                    </p>
+                </div>
+
+                <form id="analysis-form">
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                    <label for="emotion-text">
+                        Describe how you feel
+                    </label>
+
+                    <textarea
+                        id="emotion-text"
+                        name="text"
+                        rows="7"
+                        maxlength="1000"
+                        placeholder="For example: I have been feeling nervous and overwhelmed about tomorrow..."
+                        required
+                    ></textarea>
+
+                    <div class="form-footer">
+                        <span id="character-count">
+                            0 / 1000
+                        </span>
+
+                        <button
+                            id="analyse-button"
+                            type="submit"
+                        >
+                            Analyse Emotion
+                        </button>
+                    </div>
+                </form>
+
+                <div
+                    id="error-message"
+                    class="message error-message hidden"
+                    role="alert"
+                ></div>
+
+                <section
+                    id="result-card"
+                    class="result-card hidden"
+                    aria-live="polite"
+                >
+                    <p class="result-label">
+                        Estimated emotional expression
+                    </p>
+
+                    <h2 id="emotion-result">
+                        -
+                    </h2>
+
+                    <div class="confidence-section">
+                        <div class="confidence-heading">
+                            <span>
+                                Model confidence
+                            </span>
+
+                            <strong id="confidence-result">
+                                0%
+                            </strong>
+                        </div>
+
+                        <div class="confidence-track">
+                            <div
+                                id="confidence-bar"
+                                class="confidence-bar"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <div
+                        id="supportive-message"
+                        class="support-message"
+                    >
+                        <h3 id="supportive-heading">
+                            Supportive reflection
+                        </h3>
+
+                        <p id="supportive-feedback"></p>
+                    </div>
+
+                    <div
+                        id="risk-notice"
+                        class="risk-notice hidden"
+                        role="alert"
+                    >
+                        <h3 id="risk-notice-title"></h3>
+
+                        <p id="risk-notice-text"></p>
+                    </div>
+
+                    <p
+                        id="disclaimer-result"
+                        class="disclaimer"
+                    ></p>
+                </section>
+            </section>
+
+            <footer class="home-footer-note">
+                <strong>Important:</strong>
+                This system supports emotional reflection and is not
+                a substitute for professional medical or mental-health
+                diagnosis, treatment, or emergency support.
+            </footer>
 
         </section>
     </main>

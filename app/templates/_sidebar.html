@@ -1,0 +1,146 @@
+<aside class="app-sidebar" aria-label="Primary navigation">
+    <div class="sidebar-brand">
+        <span class="sidebar-brand-mark">EW</span>
+
+        <div>
+            <strong>Emotional Wellbeing</strong>
+            <small>Analysis System</small>
+        </div>
+    </div>
+
+    <div class="sidebar-account">
+        <span class="sidebar-role">
+            {% if session.get("role") == "admin" %}
+                Administrator
+            {% elif session.get("role") == "counsellor" %}
+                Counsellor
+            {% else %}
+                Member
+            {% endif %}
+        </span>
+
+        <strong>{{ session.get("full_name") }}</strong>
+    </div>
+
+    <nav class="sidebar-nav">
+        {% if session.get("role") == "admin" %}
+            <a
+                href="{{ url_for('admin.dashboard') }}"
+                class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}"
+            >
+                <span>Dashboard</span>
+            </a>
+
+            <a
+                href="{{ url_for('admin.management') }}"
+                class="{% if request.endpoint == 'admin.management' %}active{% endif %}"
+            >
+                <span>Users & Counsellors</span>
+            </a>
+
+            <a href="{{ url_for('admin.dashboard') }}#payment-reviews">
+                <span>Payment Reviews</span>
+            </a>
+
+            <a href="{{ url_for('admin.dashboard') }}#forum-moderation">
+                <span>Forum Moderation</span>
+            </a>
+
+            <a
+                href="{{ url_for('admin.analytics') }}"
+                class="{% if request.endpoint == 'admin.analytics' %}active{% endif %}"
+            >
+                <span>Analytics & Reports</span>
+            </a>
+
+            <a
+                href="{{ url_for('admin.model_updates') }}"
+                class="{% if request.endpoint == 'admin.model_updates' %}active{% endif %}"
+            >
+                <span>AI Model Updates</span>
+            </a>
+
+        {% elif session.get("role") == "counsellor" %}
+            <a
+                href="{{ url_for('counsellor_portal.dashboard') }}"
+                class="{% if request.endpoint == 'counsellor_portal.dashboard' %}active{% endif %}"
+            >
+                <span>Appointment Dashboard</span>
+            </a>
+
+            <a href="{{ url_for('counsellor_portal.dashboard') }}#availability">
+                <span>Availability</span>
+            </a>
+
+            <a href="{{ url_for('counsellor_portal.dashboard') }}#appointment-requests">
+                <span>Appointment Requests</span>
+            </a>
+
+        {% else %}
+            <a
+                href="{{ url_for('index') }}"
+                class="{% if request.endpoint == 'index' %}active{% endif %}"
+            >
+                <span>Home & Analyse</span>
+            </a>
+
+            <a
+                href="{{ url_for('dashboard.dashboard') }}"
+                class="{% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}"
+            >
+                <span>Dashboard</span>
+            </a>
+
+            <a
+                href="{{ url_for('history.mood_history') }}"
+                class="{% if request.endpoint == 'history.mood_history' %}active{% endif %}"
+            >
+                <span>Mood History</span>
+            </a>
+
+            <a
+                href="{{ url_for('counsellors.counsellor_list') }}"
+                class="{% if request.endpoint == 'counsellors.counsellor_list' %}active{% endif %}"
+            >
+                <span>Counsellors</span>
+            </a>
+
+            <a
+                href="{{ url_for('appointments.my_appointments') }}"
+                class="{% if request.endpoint == 'appointments.my_appointments' %}active{% endif %}"
+            >
+                <span>Appointments</span>
+            </a>
+
+            <a
+                href="{{ url_for('forum.forum_home') }}"
+                class="{% if request.endpoint == 'forum.forum_home' %}active{% endif %}"
+            >
+                <span>Community Forum</span>
+            </a>
+
+            <a
+                href="{{ url_for('auth.profile') }}"
+                class="{% if request.endpoint == 'auth.profile' %}active{% endif %}"
+            >
+                <span>Profile</span>
+            </a>
+        {% endif %}
+    </nav>
+
+    <form
+        method="post"
+        action="{{ url_for('auth.logout') }}"
+        class="sidebar-logout-form"
+    >
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}"
+        >
+
+        <button type="submit" class="sidebar-logout-button">
+            Log out
+        </button>
+    </form>
+</aside>
