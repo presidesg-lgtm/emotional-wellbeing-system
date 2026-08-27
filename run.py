@@ -6,6 +6,6 @@ app = create_app()
 
 if __name__ == "__main__":
     app.run(
-        debug=True,
+        debug=app.config.get("DEBUG", False),
         use_reloader=False,
     )

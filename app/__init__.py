@@ -120,6 +120,50 @@ def create_app() -> Flask:
             413,
         )
 
+
+    @app.errorhandler(404)
+    def handle_not_found(error):
+        """
+        Show a controlled response for unknown routes.
+        """
+
+        return (
+            render_template(
+                "error.html",
+                status_code=404,
+                heading="Page not found",
+                message=(
+                    "The requested page could not be found. "
+                    "Please return to the application and try again."
+                ),
+            ),
+            404,
+        )
+
+    @app.errorhandler(500)
+    def handle_internal_server_error(error):
+        """
+        Avoid exposing internal exception details to end users.
+        """
+
+        app.logger.exception(
+            "Unhandled application error.",
+            exc_info=error,
+        )
+
+        return (
+            render_template(
+                "error.html",
+                status_code=500,
+                heading="Something went wrong",
+                message=(
+                    "The system could not complete that request. "
+                    "Please try again shortly."
+                ),
+            ),
+            500,
+        )
+
     @app.get("/")
     def index():
         """

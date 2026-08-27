@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, current_app, jsonify, request, session
 
 from app.repositories.mood_repository import create_mood_entry
 from app.services.emotion_analysis_service import EmotionAnalysisService
@@ -105,4 +105,22 @@ def analyse_text():
                 }
             ),
             400,
+        )
+
+    except Exception:
+        current_app.logger.exception(
+            "Emotion analysis failed unexpectedly."
+        )
+
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": (
+                        "Emotion analysis is temporarily unavailable. "
+                        "Please try again shortly."
+                    ),
+                }
+            ),
+            503,
         )

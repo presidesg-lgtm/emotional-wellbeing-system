@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {{ status_code }} | Emotional Wellbeing Analysis System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="page-shell">
+        <section class="analysis-card auth-card">
+
+            <div class="heading-group">
+                <p class="eyebrow">
+                    System Notice
+                </p>
+
+                <h1>
+                    {{ heading }}
+                </h1>
+
+                <p class="intro-text">
+                    {{ message }}
+                </p>
+            </div>
+
+            <a
+                href="{{ url_for('index') }}"
+                class="secondary-link-button"
+            >
+                Return to Home
+            </a>
+
+        </section>
+    </main>
+</body>
+</html>

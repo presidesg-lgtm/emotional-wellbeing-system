@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from flask import (
     Blueprint,
+    current_app,
     flash,
     redirect,
     render_template,
@@ -175,6 +176,23 @@ def submit_payment_proof(
                 file_path
             )
 
+        except OSError:
+            current_app.logger.exception(
+                "Payment proof could not be written to storage."
+            )
+
+            flash(
+                "The payment proof could not be stored. "
+                "Please try again.",
+                "error",
+            )
+
+            return render_template(
+                "submit_payment_proof.html",
+                appointment=appointment,
+            )
+
+        try:
             payment_proof_id = create_payment_proof(
                 appointment_id=appointment_id,
                 user_id=user_id,
@@ -183,10 +201,23 @@ def submit_payment_proof(
             )
 
         except Exception:
+            current_app.logger.exception(
+                "Payment proof database record could not be created."
+            )
+
             if file_path.exists():
                 file_path.unlink()
 
-            raise
+            flash(
+                "The payment proof could not be recorded. "
+                "Please try again.",
+                "error",
+            )
+
+            return render_template(
+                "submit_payment_proof.html",
+                appointment=appointment,
+            )
 
         flash(
             "Payment proof submitted successfully. "
