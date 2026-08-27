@@ -18,37 +18,15 @@ from app.repositories.payment_repository import (
     find_payment_proof_by_appointment,
     get_appointment_for_payment,
 )
+from app.services.upload_validation_service import (
+    validate_payment_proof,
+)
 
 
 payment_blueprint = Blueprint(
     "payments",
     __name__,
 )
-
-
-ALLOWED_PAYMENT_EXTENSIONS = {
-    "pdf",
-    "png",
-    "jpg",
-    "jpeg",
-}
-
-
-def allowed_payment_file(filename: str):
-    """
-    Return True when the uploaded file uses
-    an allowed payment-proof extension.
-    """
-
-    if "." not in filename:
-        return False
-
-    extension = filename.rsplit(
-        ".",
-        1,
-    )[1].lower()
-
-    return extension in ALLOWED_PAYMENT_EXTENSIONS
 
 
 @payment_blueprint.route(
@@ -60,7 +38,7 @@ def submit_payment_proof(
 ):
     """
     Allow an authenticated normal user to submit
-    one payment proof for their own appointment.
+    one validated payment proof for their own appointment.
     """
 
     if "user_id" not in session:
@@ -132,10 +110,7 @@ def submit_payment_proof(
             "payment_proof"
         )
 
-        if (
-            uploaded_file is None
-            or not uploaded_file.filename
-        ):
+        if uploaded_file is None:
             flash(
                 "Please select a payment proof file.",
                 "error",
@@ -146,12 +121,13 @@ def submit_payment_proof(
                 appointment=appointment,
             )
 
-        if not allowed_payment_file(
-            uploaded_file.filename
-        ):
+        validation = validate_payment_proof(
+            uploaded_file
+        )
+
+        if not validation.is_valid:
             flash(
-                "Only PDF, PNG, JPG, and JPEG files "
-                "are allowed.",
+                validation.message,
                 "error",
             )
 
@@ -164,13 +140,20 @@ def submit_payment_proof(
             uploaded_file.filename
         )
 
-        extension = original_filename.rsplit(
-            ".",
-            1,
-        )[1].lower()
+        if not original_filename:
+            flash(
+                "The selected filename is not valid.",
+                "error",
+            )
+
+            return render_template(
+                "submit_payment_proof.html",
+                appointment=appointment,
+            )
 
         stored_filename = (
-            f"{uuid4().hex}.{extension}"
+            f"{uuid4().hex}."
+            f"{validation.detected_extension}"
         )
 
         upload_directory = Path(
@@ -187,16 +170,23 @@ def submit_payment_proof(
             / stored_filename
         )
 
-        uploaded_file.save(
-            file_path
-        )
+        try:
+            uploaded_file.save(
+                file_path
+            )
 
-        payment_proof_id = create_payment_proof(
-            appointment_id=appointment_id,
-            user_id=user_id,
-            original_filename=original_filename,
-            stored_filename=stored_filename,
-        )
+            payment_proof_id = create_payment_proof(
+                appointment_id=appointment_id,
+                user_id=user_id,
+                original_filename=original_filename,
+                stored_filename=stored_filename,
+            )
+
+        except Exception:
+            if file_path.exists():
+                file_path.unlink()
+
+            raise
 
         flash(
             "Payment proof submitted successfully. "

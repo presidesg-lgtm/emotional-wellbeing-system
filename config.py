@@ -38,3 +38,6 @@ class Config:
     )
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
     SESSION_REFRESH_EACH_REQUEST = True
+
+    # Limit request bodies to protect file-upload endpoints.
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024

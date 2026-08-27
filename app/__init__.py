@@ -1,10 +1,14 @@
 from flask import (
     Flask,
+    flash,
     redirect,
     render_template,
+    request,
     session,
     url_for,
 )
+
+from werkzeug.exceptions import RequestEntityTooLarge
 
 from config import Config
 
@@ -86,6 +90,35 @@ def create_app() -> Flask:
     app.register_blueprint(
         forum_blueprint
     )
+
+
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_request_too_large(error):
+        """
+        Return users to the payment form when an upload exceeds the
+        configured request-size limit.
+        """
+
+        if (
+            request.endpoint == "payments.submit_payment_proof"
+            and request.view_args
+            and "appointment_id" in request.view_args
+        ):
+            flash(
+                "Payment proof files must not exceed 5 MB.",
+                "error",
+            )
+            return redirect(
+                url_for(
+                    "payments.submit_payment_proof",
+                    appointment_id=request.view_args["appointment_id"],
+                )
+            )
+
+        return (
+            "The submitted request is too large.",
+            413,
+        )
 
     @app.get("/")
     def index():
